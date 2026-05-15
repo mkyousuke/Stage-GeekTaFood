@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport de Stage - Cybersécurité</title>
+    <style>
+        /* === VARIABLES & RESET === */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: blur(20px);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #0ea5e9;
+            --accent-glow: rgba(14, 165, 233, 0.5);
+            --bg-color: #020617;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* === ANIMATED BACKGROUND (BLOBS) === */
+        .bg-shape {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            animation: float 15s infinite alternate ease-in-out;
+            opacity: 0.5;
+        }
+        .shape1 {
+            width: 600px; height: 600px;
+            background: #2563eb;
+            top: -200px; left: -150px;
+        }
+        .shape2 {
+            width: 700px; height: 700px;
+            background: #7c3aed;
+            bottom: -250px; right: -200px;
+            animation-delay: -7s;
+        }
+        .shape3 {
+            width: 500px; height: 500px;
+            background: #0ea5e9;
+            top: 30%; left: 40%;
+            animation-duration: 20s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(80px, 100px) scale(1.1); }
+        }
+
+        /* === NAVBAR === */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(2, 6, 23, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #38bdf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #fff;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* === APP CONTAINER & ROUTING === */
+        main {
+            padding-top: 100px; /* Space for navbar */
+            min-height: 100vh;
+            display: grid;
+        }
+
+        .page {
+            grid-area: 1 / 1; /* Stack pages on top of each other */
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none; /* Disable interaction when hidden */
+        }
+
+        .page.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        /* === ACCUEIL (HOME) SECTION === */
+        #accueil {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title span {
+            background: linear-gradient(to right, #38bdf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            max-width: 800px;
+            line-height: 1.6;
+        }
+
+        .info-cards {
+            display: flex;
+            gap: 2rem;
+            width: 100%;
+            margin-bottom: 3rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .info-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            flex: 1;
+            min-width: 250px;
+            text-align: left;
+            transition: transform 0.3s ease;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .info-card h3 {
+            font-size: 1rem;
+            color: #38bdf8;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-card p {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--accent-glow);
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px var(--accent-glow);
+        }
+
+        /* === COURS SECTION === */
+        .courses-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .courses-header h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 2.5rem;
+            padding: 0 2rem 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* === GLASS CARDS (COURSES) === */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 15px 45px 0 var(--accent-glow);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            align-self: flex-start;
+            background: rgba(14, 165, 233, 0.15);
+            color: #38bdf8;
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+        }
+
+        .glass-card .title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .glass-card .description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        /* === VIDEO INTEGRATION === */
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* Ratio 16:9 */
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .video-wrapper video, .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: none;
+            transition: opacity 0.3s;
+        }
+
+        .btn-course {
+            display: inline-block;
+            text-align: center;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-course:hover {
+            background: rgba(14, 165, 233, 0.2);
+            color: #38bdf8;
+            border-color: #38bdf8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 2.5rem; }
+            .info-cards { flex-direction: column; }
+            .courses-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animations de fond -->
+    <div class="bg-shape shape1"></div>
+    <div class="bg-shape shape2"></div>
+    <div class="bg-shape shape3"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-logo">CyberStage.</div>
+        <div class="nav-links">
+            <a class="nav-link active" onclick="switchPage('accueil')">Accueil</a>
+            <a class="nav-link" onclick="switchPage('cours')">Mes Cours</a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- PAGE ACCUEIL -->
+        <section id="accueil" class="page active">
+            <h1 class="hero-title">Rapport de Stage <br><span>Cybersécurité</span></h1>
+            <p class="hero-subtitle">
+                Bienvenue sur mon rapport de stage interactif. Durant cette immersion, ma mission principale a été de concevoir, rédiger et animer des supports de formation techniques pour sensibiliser et former les équipes aux enjeux de la cybersécurité moderne.
+            </p>
+
+            <div class="info-cards">
+                <div class="info-card">
+                    <h3>Mon Rôle</h3>
+                    <p>Formateur & Analyste Cybersécurité</p>
+                </div>
+                <div class="info-card">
+                    <h3>Objectif Principal</h3>
+                    <p>Création de cours écrits et de screencasts pédagogiques.</p>
+                </div>
+                <div class="info-card">
+                    <h3>Modules Réalisés</h3>
+                    <p>10 modules complets (CYB-041 à CYB-050)</p>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="switchPage('cours')">Découvrir mes missions & cours</button>
+        </section>
+
+        <!-- PAGE COURS -->
+        <section id="cours" class="page">
+            <div class="courses-header">
+                <h2>Modules de Formation</h2>
+                <p style="color: var(--text-muted);">Retrouvez ci-dessous l'intégralité des screencasts et supports écrits réalisés.</p>
+            </div>
+
+            <div class="courses-grid">
+                <!-- CYB-041 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-041</span>
+                        <h3 class="title">Cartographie et analyse des SI</h3>
+                    </div>
+                    <p class="description">Appréhender l'architecture globale, identifier les actifs critiques et cartographier les flux du Système d'Information.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-041</text></svg>">
+                            <source src="votre-video-041.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-041.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-042 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-042</span>
+                        <h3 class="title">Déploiement et gestion des pare-feu</h3>
+                    </div>
+                    <p class="description">Configuration des règles de filtrage, gestion des politiques de sécurité et administration des équipements réseau.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-042</text></svg>">
+                            <source src="votre-video-042.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-042.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-043 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-043</span>
+                        <h3 class="title">Gestion des logs et centralisation</h3>
+                    </div>
+                    <p class="description">Collecte, agrégation et conservation des journaux d'événements pour assurer la traçabilité et l'investigation.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-043</text></svg>">
+                            <source src="votre-video-043.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-043.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-044 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-044</span>
+                        <h3 class="title">Initiation à un SOC</h3>
+                    </div>
+                    <p class="description">Découverte du Security Operations Center, de son rôle critique dans la surveillance et la protection en temps réel.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-044</text></svg>">
+                            <source src="votre-video-044.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-044.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-045 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-045</span>
+                        <h3 class="title">Gestion des incidents et réponse</h3>
+                    </div>
+                    <p class="description">Processus d'escalade, méthodologies de confinement, éradication des menaces et remédiation post-attaque.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-045</text></svg>">
+                            <source src="votre-video-045.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-045.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-046 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-046</span>
+                        <h3 class="title">Configuration et supervision SIEM</h3>
+                    </div>
+                    <p class="description">Mécanismes de corrélation d'événements, configuration d'alertes pertinentes et création de dashboards.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-046</text></svg>">
+                            <source src="votre-video-046.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-046.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-047 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-047</span>
+                        <h3 class="title">Veille et intelligence cyber (CTI)</h3>
+                    </div>
+                    <p class="description">Recherche proactive de vulnérabilités, analyse des TTPs (Tactics, Techniques, Procedures) des attaquants.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-047</text></svg>">
+                            <source src="votre-video-047.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-047.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-048 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-048</span>
+                        <h3 class="title">Sécurité périmétrique et DMZ</h3>
+                    </div>
+                    <p class="description">Concepts de segmentation réseau, isolation rigoureuse des services exposés et protection des frontières.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-048</text></svg>">
+                            <source src="votre-video-048.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-048.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-049 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-049</span>
+                        <h3 class="title">Tests de conformité et audits</h3>
+                    </div>
+                    <p class="description">Vérification du durcissement système, conformité aux normes (ex: ISO 27001, CIS) et scans de vulnérabilités.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-049</text></svg>">
+                            <source src="votre-video-049.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-049.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+                <!-- CYB-050 -->
+                <article class="glass-card">
+                    <div class="card-header">
+                        <span class="tag">CYB-050</span>
+                        <h3 class="title">Formation à l'analyse forensique</h3>
+                    </div>
+                    <p class="description">Principes de préservation des preuves numériques, bases de l'analyse de mémoire et investigation post-incident.</p>
+                    <div class="video-wrapper">
+                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-050</text></svg>">
+                            <source src="votre-video-050.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                    <a href="cours/CYB-050.html" class="btn-course">Consulter le cours écrit</a>
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Fonction très légère pour naviguer entre l'accueil et les cours
+        function switchPage(pageId) {
+            // 1. Cacher toutes les pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 2. Gérer la surbrillance du menu de navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Si on est sur l'accueil, on allume Accueil. Si on est sur les cours, on allume Mes Cours.
+            if (pageId === 'accueil') {
+                document.querySelector('.nav-links a[onclick*="accueil"]').classList.add('active');
+            } else if (pageId === 'cours') {
+                document.querySelector('.nav-links a[onclick*="cours"]').classList.add('active');
+            }
+
+            // 3. Afficher la page demandée
+            document.getElementById(pageId).classList.add('active');
+            
+            // 4. Remonter en haut de la page doucement
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>
