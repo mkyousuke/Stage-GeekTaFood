@@ -114,7 +114,7 @@
         /* === APP CONTAINER & ROUTING === */
         main {
             padding-top: 100px; /* Space for navbar */
-            min-height: 100vh;
+            min-height: calc(100vh - 100px);
             display: grid;
         }
 
@@ -139,9 +139,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Aligné vers le haut pour éviter de devoir scroller */
             text-align: center;
-            padding: 2rem;
+            padding: 4rem 2rem 2rem 2rem;
             max-width: 1000px;
             margin: 0 auto;
         }
@@ -230,6 +230,7 @@
         .courses-header {
             text-align: center;
             margin-bottom: 3rem;
+            padding-top: 2rem;
         }
 
         .courses-header h2 {
@@ -358,10 +359,10 @@
 
     <!-- Navigation -->
     <nav>
-        <div class="nav-logo">CyberStage.</div>
+        <div class="nav-logo">Stage chez GeekTaFood</div>
         <div class="nav-links">
             <a class="nav-link active" onclick="switchPage('accueil')">Accueil</a>
-            <a class="nav-link" onclick="switchPage('cours')">Mes Cours</a>
+            <a class="nav-link" onclick="switchPage('cours')">Mes Cours Réalisés</a>
         </div>
     </nav>
 
@@ -399,6 +400,7 @@
             </div>
 
             <div class="courses-grid">
+                
                 <!-- CYB-041 -->
                 <article class="glass-card">
                     <div class="card-header">
@@ -407,9 +409,7 @@
                     </div>
                     <p class="description">Appréhender l'architecture globale, identifier les actifs critiques et cartographier les flux du Système d'Information.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-041</text></svg>">
-                            <source src="votre-video-041.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/s8E9k9FaJxU" title="Screencast CYB-041" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-041.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -422,9 +422,7 @@
                     </div>
                     <p class="description">Configuration des règles de filtrage, gestion des politiques de sécurité et administration des équipements réseau.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-042</text></svg>">
-                            <source src="votre-video-042.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/3tF6NJ5KAoQ" title="Screencast CYB-042" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-042.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -437,9 +435,7 @@
                     </div>
                     <p class="description">Collecte, agrégation et conservation des journaux d'événements pour assurer la traçabilité et l'investigation.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-043</text></svg>">
-                            <source src="votre-video-043.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/8hXgI5-XmrQ" title="Screencast CYB-043" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-043.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -452,9 +448,8 @@
                     </div>
                     <p class="description">Découverte du Security Operations Center, de son rôle critique dans la surveillance et la protection en temps réel.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-044</text></svg>">
-                            <source src="votre-video-044.mp4" type="video/mp4">
-                        </video>
+                        <!-- Pour ajouter une vidéo, remplacez ID_DE_LA_VIDEO par l'identifiant YouTube -->
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/QL6lYyU9Wag" title="Screencast CYB-044" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-044.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -467,9 +462,7 @@
                     </div>
                     <p class="description">Processus d'escalade, méthodologies de confinement, éradication des menaces et remédiation post-attaque.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-045</text></svg>">
-                            <source src="votre-video-045.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/xg2nKnpD7u8" title="Screencast CYB-045" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-045.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -482,9 +475,7 @@
                     </div>
                     <p class="description">Mécanismes de corrélation d'événements, configuration d'alertes pertinentes et création de dashboards.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-046</text></svg>">
-                            <source src="votre-video-046.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/NmMKq30emqc" title="Screencast CYB-046" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-046.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -497,9 +488,7 @@
                     </div>
                     <p class="description">Recherche proactive de vulnérabilités, analyse des TTPs (Tactics, Techniques, Procedures) des attaquants.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-047</text></svg>">
-                            <source src="votre-video-047.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/ID_DE_LA_VIDEO" title="Screencast CYB-047" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-047.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -512,9 +501,7 @@
                     </div>
                     <p class="description">Concepts de segmentation réseau, isolation rigoureuse des services exposés et protection des frontières.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-048</text></svg>">
-                            <source src="votre-video-048.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/ID_DE_LA_VIDEO" title="Screencast CYB-048" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-048.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -527,9 +514,7 @@
                     </div>
                     <p class="description">Vérification du durcissement système, conformité aux normes (ex: ISO 27001, CIS) et scans de vulnérabilités.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-049</text></svg>">
-                            <source src="votre-video-049.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/ID_DE_LA_VIDEO" title="Screencast CYB-049" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-049.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
@@ -542,9 +527,7 @@
                     </div>
                     <p class="description">Principes de préservation des preuves numériques, bases de l'analyse de mémoire et investigation post-incident.</p>
                     <div class="video-wrapper">
-                        <video controls preload="none" poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><rect width='100%' height='100%' fill='%23111'/><text x='50%' y='50%' font-family='sans-serif' font-size='16' fill='%23555' dominant-baseline='middle' text-anchor='middle'>Screencast CYB-050</text></svg>">
-                            <source src="votre-video-050.mp4" type="video/mp4">
-                        </video>
+                        <iframe width="100%" height="315" src="https://www.youtube.com/embed/ID_DE_LA_VIDEO" title="Screencast CYB-050" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                     </div>
                     <a href="cours/CYB-050.html" class="btn-course">Consulter le cours écrit</a>
                 </article>
