@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB-045 — Gestion des incidents et réponse aux attaques</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME ===== */
+        :root {
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.3);
+            --radius: 16px;
+            --transition: .4s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.75);
+            --nav-bg: rgba(3,7,18,.8);
+            --callout-info: rgba(56,189,248,.08);
+            --callout-warn: rgba(251,191,36,.08);
+            --callout-tip: rgba(74,222,128,.08);
+            --callout-info-border: rgba(56,189,248,.3);
+            --callout-warn-border: rgba(251,191,36,.3);
+            --callout-tip-border: rgba(74,222,128,.3);
+        }
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e4eefb;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.75);
+            --glass-border: rgba(100,140,210,.18);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,.85);
+            --nav-bg: rgba(240,246,255,.88);
+            --callout-info: rgba(14,165,233,.07);
+            --callout-warn: rgba(217,119,6,.07);
+            --callout-tip: rgba(22,163,74,.07);
+            --callout-info-border: rgba(14,165,233,.3);
+            --callout-warn-border: rgba(217,119,6,.3);
+            --callout-tip-border: rgba(22,163,74,.3);
+        }
+
+        /* ===== RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ===== SCROLL PROGRESS ===== */
+        #progress-bar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6);
+            z-index: 9999; transition: width .1s linear;
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ===== BACKGROUND ===== */
+        .bg-shape {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        [data-theme="dark"] .bg-shape { opacity: .3; }
+        [data-theme="light"] .bg-shape { opacity: .12; }
+        .s1 { width:550px;height:550px;background:#1d4ed8;top:-150px;left:-120px; }
+        .s2 { width:600px;height:600px;background:#6d28d9;bottom:-200px;right:-150px;animation-delay:-8s; }
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(60px,80px) scale(1.1); }
+        }
+
+        /* ===== TOP NAV ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            height: 64px; padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500; transition: background var(--transition);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .4rem .9rem; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-soft);
+            text-decoration: none; font-weight: 600; font-size: .85rem;
+            transition: all .25s; cursor: pointer;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .breadcrumb a:hover { color: var(--accent); }
+        .breadcrumb-sep { opacity: .4; }
+
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .reading-time {
+            font-size: .8rem; color: var(--text-muted);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: .3rem .8rem; border-radius: 8px;
+            display: flex; align-items: center; gap: .3rem;
+        }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-areas: "toc content";
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 84px 2rem 5rem;
+            position: relative; z-index: 1;
+            align-items: start;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            grid-area: toc;
+            position: sticky; top: 80px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .toc::-webkit-scrollbar { width: 4px; }
+        .toc::-webkit-scrollbar-track { background: transparent; }
+        .toc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .toc-title {
+            font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: .9rem; padding-bottom: .7rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toc-list { list-style: none; display: flex; flex-direction: column; gap: .15rem; }
+
+        .toc-item a {
+            display: flex; align-items: flex-start; gap: .5rem;
+            padding: .4rem .6rem; border-radius: 8px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: .83rem; font-weight: 500; line-height: 1.4;
+            transition: all .2s;
+            border-left: 2px solid transparent;
+        }
+        .toc-item a:hover { color: var(--text); background: var(--glass); }
+        .toc-item a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.07); }
+        .toc-num { font-size: .72rem; color: var(--accent); font-weight: 700; flex-shrink: 0; padding-top: .1rem; }
+
+        /* Progress in TOC */
+        .toc-progress {
+            margin-top: 1.2rem; padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .toc-prog-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+        }
+        .toc-prog-label span:last-child { color: var(--accent); font-weight: 600; }
+        .toc-prog-track {
+            height: 4px; background: var(--bg3); border-radius: 50px; overflow: hidden;
+        }
+        .toc-prog-fill {
+            height: 100%; border-radius: 50px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            width: 0%; transition: width .3s ease;
+        }
+
+        /* ===== COURSE CONTENT ===== */
+        .content {
+            grid-area: content;
+            min-width: 0;
+        }
+
+        /* Course header */
+        .course-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: .8rem;
+            flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+
+        .tag-module {
+            background: rgba(56,189,248,.12);
+            color: #38bdf8; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 700; letter-spacing: .5px;
+            border: 1px solid rgba(56,189,248,.25);
+        }
+        .tag-cat {
+            background: rgba(129,140,248,.1);
+            color: #a78bfa; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 600;
+            border: 1px solid rgba(129,140,248,.2);
+        }
+        .status-done {
+            display: flex; align-items: center; gap: .35rem;
+            background: rgba(74,222,128,.1); color: #4ade80;
+            border: 1px solid rgba(74,222,128,.2);
+            padding: .3rem .8rem; border-radius: 30px;
+            font-size: .78rem; font-weight: 600;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .course-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 800; line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f1f5f9 40%, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .course-header h1 {
+            background: linear-gradient(135deg, #0f172a 40%, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .course-intro {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-soft); margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+        }
+        .skill-tag {
+            font-size: .75rem; font-weight: 600;
+            padding: .25rem .7rem; border-radius: 7px;
+            background: var(--bg3);
+            color: var(--text-soft);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ===== CONTENT BODY ===== */
+        .content-body {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sections */
+        .section { margin-bottom: 3rem; }
+        .section:last-of-type { margin-bottom: 0; }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem; font-weight: 700;
+            color: var(--text); margin-bottom: 1.1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .section-num {
+            font-size: .8rem; font-weight: 700;
+            color: var(--accent); background: rgba(56,189,248,.1);
+            border: 1px solid rgba(56,189,248,.2);
+            padding: .2rem .55rem; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content-body p {
+            font-size: 1rem; line-height: 1.8;
+            color: var(--text-soft); margin-bottom: 1.1rem;
+        }
+
+        /* Lists */
+        .content-body ul, .content-body ol {
+            margin: .5rem 0 1.2rem 1.2rem;
+            color: var(--text-soft);
+        }
+        .content-body li {
+            font-size: 1rem; line-height: 1.75;
+            margin-bottom: .4rem; padding-left: .3rem;
+        }
+        .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            margin: 1.4rem 0; display: flex; gap: .9rem; align-items: flex-start;
+        }
+        .callout-info {
+            background: var(--callout-info);
+            border: 1px solid var(--callout-info-border);
+            border-left: 3px solid #38bdf8;
+        }
+        .callout-warn {
+            background: var(--callout-warn);
+            border: 1px solid var(--callout-warn-border);
+            border-left: 3px solid #fbbf24;
+        }
+        .callout-tip {
+            background: var(--callout-tip);
+            border: 1px solid var(--callout-tip-border);
+            border-left: 3px solid #4ade80;
+        }
+        .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+        .callout-body { flex: 1; }
+        .callout-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; margin-bottom: .3rem;
+        }
+        .callout-info .callout-label { color: #38bdf8; }
+        .callout-warn .callout-label { color: #fbbf24; }
+        .callout-tip .callout-label { color: #4ade80; }
+        .callout-body p {
+            font-size: .92rem; margin-bottom: 0; color: var(--text-soft);
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; font-weight: 500;
+            background: var(--bg3); color: var(--accent);
+            padding: .15rem .45rem; border-radius: 5px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--bg2); border: 1px solid var(--glass-border);
+            border-radius: 12px; overflow: hidden; margin: 1.2rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .6rem 1rem; border-bottom: 1px solid var(--glass-border);
+            background: var(--bg3);
+        }
+        .code-lang {
+            font-size: .72rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .copy-btn {
+            font-size: .72rem; font-weight: 600; color: var(--text-muted);
+            background: transparent; border: 1px solid var(--glass-border);
+            padding: .2rem .6rem; border-radius: 5px; cursor: pointer;
+            transition: all .2s;
+        }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .code-block pre {
+            padding: 1.1rem 1.2rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; line-height: 1.65;
+            color: var(--text-soft);
+            margin: 0;
+        }
+
+        /* Definition table */
+        .def-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .def-table th {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-muted);
+            padding: .7rem 1rem; text-align: left;
+            background: var(--bg3); border-bottom: 1px solid var(--glass-border);
+        }
+        .def-table th:first-child { border-radius: 8px 0 0 0; }
+        .def-table th:last-child { border-radius: 0 8px 0 0; }
+        .def-table td {
+            padding: .75rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-soft); vertical-align: top;
+        }
+        .def-table tr:last-child td { border-bottom: none; }
+        .def-table tr:hover td { background: var(--glass); }
+        .def-table td:first-child { font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: .82rem; white-space: nowrap; }
+
+        /* ===== COURSE FOOTER ===== */
+        .course-footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
+
+        .btn-dl {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; border-radius: 50px; text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all .3s;
+        }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
+
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: var(--text-soft);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 50px; text-decoration: none;
+            transition: all .3s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-areas: "content";
+            }
+            .toc { display: none; }
+            .breadcrumb { display: none; }
+        }
+        @media (max-width: 600px) {
+            .content-body, .course-header, .course-footer { padding: 1.5rem; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
+
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="btn-back">← Retour</a>
+            <div class="breadcrumb">
+                <a href="../index.html">Formations</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>CYB-045</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="reading-time">⏱ ~15 min de lecture</div>
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <aside class="toc">
+            <div class="toc-title">Table des matières</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#intro" data-section="intro">
+                        <span class="toc-num">00</span>Introduction
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-1" data-section="section-1">
+                        <span class="toc-num">01</span>Fondements de la Gestion
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-2" data-section="section-2">
+                        <span class="toc-num">02</span>Préparation (Phase 1)
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-3" data-section="section-3">
+                        <span class="toc-num">03</span>Détection & Analyse (Phase 2)
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-4" data-section="section-4">
+                        <span class="toc-num">04</span>Confinement (Phase 3)
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-5" data-section="section-5">
+                        <span class="toc-num">05</span>Forensique Numérique
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Éradication (Phase 4)
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Rétablissement (Phase 5)
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Post-Incident (Phase 6)
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-9" data-section="section-9">
+                        <span class="toc-num">09</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">10</span>Glossaire
+                    </a>
+                </li>
+            </ul>
+
+            <div class="toc-progress">
+                <div class="toc-prog-label">
+                    <span>Progression</span>
+                    <span id="toc-pct">0%</span>
+                </div>
+                <div class="toc-prog-track">
+                    <div class="toc-prog-fill" id="toc-prog-fill"></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+
+            <header class="course-header" id="intro">
+                <div class="header-meta">
+                    <span class="tag-module">CYB-045</span>
+                    <span class="tag-cat">Cybersécurité Opérationnelle</span>
+                    <span class="status-done"><span class="status-dot"></span>Terminé</span>
+                </div>
+                <h1>Gestion des incidents et réponse aux attaques</h1>
+                <p class="course-intro">
+                    Une cyberattaque réussie n'est pas une fatalité, mais l'absence de réponse organisée, elle, est une erreur de gouvernance. Entre le moment où un attaquant pénètre dans un système d'information et le moment où il atteint son objectif — chiffrement des données, exfiltration, sabotage — il s'écoule en moyenne plusieurs heures, parfois plusieurs jours ou semaines dans le cas d'attaques APT. Ce délai est une fenêtre d'opportunité pour le défenseur : une organisation capable de détecter rapidement une intrusion et d'y répondre de manière structurée peut interrompre la chaîne d'attaque avant que les dommages ne deviennent irréversibles.
+                </p>
+                <div class="skill-row">
+                    <span class="skill-tag">PICERF</span>
+                    <span class="skill-tag">Incident Response</span>
+                    <span class="skill-tag">Forensique</span>
+                    <span class="skill-tag">Ransomware</span>
+                    <span class="skill-tag">Containment</span>
+                    <span class="skill-tag">Conformité RGPD/NIS2</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <p>La gestion des incidents de sécurité est la discipline qui transforme cette fenêtre d'opportunité en avantage défensif concret. Elle repose sur une méthodologie rigoureuse — détecter, analyser, confiner, éradiquer, rétablir, capitaliser — appliquée par des équipes formées, équipées d'outils adaptés et guidées par des processus documentés. Sans cette méthodologie, même les meilleures technologies de détection restent inefficaces : une alerte non traitée selon un processus clair ne protège personne.</p>
+                
+                <p>Ce cours explore en profondeur chacune des phases du cycle de réponse à incident, depuis la préparation en amont jusqu'au retour d'expérience post-incident. Nous aborderons les techniques d'analyse forensique numérique permettant de reconstituer la chronologie d'une attaque, les stratégies de confinement adaptées à chaque type de menace, les procédures de rétablissement garantissant un retour à un état sécurisé, et les obligations légales de notification qui s'imposent aux organisations lors d'incidents affectant des données personnelles ou des infrastructures critiques.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <p>À l'issue de ce module, vous serez capable d'appliquer les six phases du cycle PICERF, de qualifier un incident et son niveau de criticité, de mettre en œuvre des actions de confinement, de collecter et analyser des artefacts forensiques, et de conduire un post-mortem productif tout en respectant les exigences légales (NIS2, RGPD, DORA).</p>
+                    </div>
+                </div>
+
+                <div class="section" id="section-1">
+                    <h2 class="section-title">
+                        <span class="section-num">01</span>
+                        Fondements de la Gestion des Incidents
+                    </h2>
+
+                    <p>Un incident de sécurité est tout événement qui compromet ou menace de compromettre la confidentialité, l'intégrité ou la disponibilité d'un actif du système d'information. Cette définition volontairement large englobe des réalités très diverses : l'exécution d'un ransomware qui chiffre les données de production, mais aussi un employé qui copie des fichiers confidentiels sur une clé USB personnelle, un attaquant qui scanne les ports d'un serveur exposé, ou encore une erreur de configuration qui expose des données sensibles sur Internet.</p>
+
+                    <p>La distinction entre un événement de sécurité et un incident de sécurité est fondamentale. Un événement de sécurité est tout fait observable — une tentative de connexion, une requête DNS vers un domaine suspect, une modification de fichier — qui peut ou non indiquer un problème. Un incident de sécurité est un événement (ou une séquence d'événements) qui a effectivement un impact négatif, ou dont l'impact potentiel justifie une réponse organisée. Ce filtre est le rôle du triage SOC : transformer un flux d'événements bruts en incidents qualifiés nécessitant une action.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Niveau</th>
+                                <th>Criticité</th>
+                                <th>Exemples d'incidents</th>
+                                <th>Délai de réponse cible</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>P1 — Critique</td><td>Impact majeur sur les activités</td><td>Ransomware actif, intrusion APT, exfiltration de données massives, compromission AD</td><td>Immédiat — cellule de crise < 30 min</td></tr>
+                            <tr><td>P2 — Élevé</td><td>Impact significatif, propagation possible</td><td>Compte privilégié compromis, malware détecté sur serveur, DDoS impactant</td><td>Prise en charge < 1 heure</td></tr>
+                            <tr><td>P3 — Modéré</td><td>Impact limité, contenu sur un périmètre restreint</td><td>Phishing ayant abouti sur un poste, scan réseau interne, violation de politique</td><td>Prise en charge < 4 heures</td></tr>
+                            <tr><td>P4 — Faible</td><td>Impact négligeable ou potentiel</td><td>Tentative de brute force échouée, alerte IDS isolée, anomalie comportementale mineure</td><td>Traitement dans les 24 heures</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p>La réponse à incident suit un cycle structuré en six phases, souvent désignées par l'acronyme PICERF (Préparation, Identification, Confinement, Éradication, Rétablissement, Feedback). Ce modèle, popularisé par le NIST (SP 800-61), est aujourd'hui la référence mondiale.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Phase</th>
+                                <th>Nom</th>
+                                <th>Objectif principal</th>
+                                <th>Acteurs clés</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>Préparation</td><td>Mettre en place les capacités de détection et de réponse avant tout incident</td><td>RSSI, SOC Manager, équipes IT</td></tr>
+                            <tr><td>2</td><td>Détection & Analyse</td><td>Identifier l'incident, qualifier sa nature et évaluer son impact</td><td>Analystes N1/N2, SIEM, EDR</td></tr>
+                            <tr><td>3</td><td>Confinement</td><td>Empêcher la propagation de la menace sans alerter l'attaquant</td><td>Analystes N2/N3, équipes IT</td></tr>
+                            <tr><td>4</td><td>Éradication</td><td>Supprimer la cause racine de l'incident du système d'information</td><td>N2/N3, équipes IT, forensics</td></tr>
+                            <tr><td>5</td><td>Rétablissement</td><td>Restaurer les services dans un état sécurisé et surveillé</td><td>Équipes IT, N2, métiers</td></tr>
+                            <tr><td>6</td><td>Post-incident</td><td>Capitaliser sur l'expérience pour améliorer les défenses</td><td>Toute l'équipe SOC, RSSI, direction</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section" id="section-2">
+                    <h2 class="section-title">
+                        <span class="section-num">02</span>
+                        Phase 1 — Préparation
+                    </h2>
+
+                    <p>Paradoxalement, la phase la plus déterminante dans la gestion d'un incident est celle qui précède tout incident : la préparation. Une organisation bien préparée — dotée de plans de réponse documentés, d'équipes formées, d'outils déployés et testés — répondra à une attaque avec une efficacité sans commune mesure avec une organisation qui improvise sa réponse dans l'urgence.</p>
+
+                    <p>Le Plan de Réponse à Incident (PRI) est le document de référence qui formalise les capacités de réponse de l'organisation. Il décrit la politique de gestion, la structure organisationnelle de réponse, les playbooks par type d'incident (ransomware, phishing...), les contacts d'urgence (ANSSI, CERT) et les obligations légales.</p>
+
+                    <div class="callout callout-tip">
+                        <span class="callout-icon">✅</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Sauvegardes : Règle du 3-2-1</div>
+                            <p>La stratégie de sauvegarde est vitale contre les ransomwares. Appliquez la règle du 3-2-1 : trois copies des données, sur deux supports différents, dont une hors site (ou hors ligne/immuable). Une sauvegarde non testée régulièrement est une sauvegarde dont on ne connaît pas la valeur réelle.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        Phase 2 — Détection et Analyse
+                    </h2>
+
+                    <p>L'analyse initiale vise à répondre aux « 5W » de l'investigation : What (que s'est-il passé ?), Who (qui est impliqué ?), When (quand cela a-t-il débuté ?), Where (quels systèmes sont affectés ?) et How (comment l'attaquant est-il entré ?).</p>
+
+                    <p>La <strong>timeline</strong> (chronologie) est la représentation structurée de l'ensemble des événements liés à un incident, construite progressivement par l'analyste N2 à partir du SIEM, de l'EDR et des logs. Elle permet d'identifier le patient zéro et de tracer les mouvements latéraux.</p>
+
+                    <p>Lors de l'investigation, l'analyste extrait des <strong>IOC</strong> (Indicateurs de Compromission) : hashes de fichiers malveillants, adresses IP de serveurs C2, noms de domaines d'attaque. Ces IOC servent à rechercher d'autres systèmes infectés (via l'EDR) et peuvent être partagés avec la communauté (via MISP).</p>
+                </div>
+
+                <div class="section" id="section-4">
+                    <h2 class="section-title">
+                        <span class="section-num">04</span>
+                        Phase 3 — Confinement
+                    </h2>
+
+                    <p>Le confinement est la phase où le défenseur reprend l'initiative pour empêcher la menace de se propager, sans nécessairement l'éliminer immédiatement. Il se divise en confinement court terme (isolation réseau immédiate) et long terme (modifications des règles pare-feu).</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Type d'incident</th>
+                                <th>Actions de confinement court terme</th>
+                                <th>Actions de confinement long terme</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Ransomware</td><td>Isolation réseau immédiate des machines affectées via EDR, déconnexion des partages réseau</td><td>Blocage des règles de chiffrement sortant, audit des sauvegardes, reconstruction des machines</td></tr>
+                            <tr><td>Compte compromis</td><td>Désactivation du compte dans l'AD, révocation des sessions actives et tokens OAuth</td><td>Réinitialisation du mot de passe, audit des actions réalisées, activation MFA</td></tr>
+                            <tr><td>Malware sur poste</td><td>Isolation via EDR, blocage du hash malveillant sur tous les endpoints</td><td>Analyse forensique du poste, recherche latérale sur les machines ayant communiqué avec le poste</td></tr>
+                            <tr><td>Intrusion serveur</td><td>Blocage de l'IP source sur le pare-feu, isolation du serveur compromis</td><td>Audit des accès SSH/RDP, revue des crontabs et services installés, scan de rootkits</td></tr>
+                            <tr><td>Exfiltration de données</td><td>Blocage du flux sortant au niveau pare-feu, identification et isolation de la source</td><td>Analyse du volume exfiltré, notification CNIL si données personnelles, revue des accès DLP</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-warn">
+                        <span class="callout-icon">⚠️</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Préservation des Preuves</div>
+                            <p>Avant d'éteindre ou d'isoler un système compromis, pensez à la chaîne de custody. Éteindre une machine détruit le contenu de la mémoire vive (RAM) qui peut contenir des clés de chiffrement ou des malwares <em>fileless</em>. Il faut d'abord réaliser un dump mémoire complet.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-5">
+                    <h2 class="section-title">
+                        <span class="section-num">05</span>
+                        Investigation Forensique Numérique
+                    </h2>
+
+                    <p>La forensique numérique consiste à collecter, préserver, analyser et présenter des preuves numériques sans altérer l'original (en utilisant des copies bit-à-bit vérifiées par un hash).</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Artefact</th>
+                                <th>Source</th>
+                                <th>Informations exploitables</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Dump mémoire vive (RAM)</td><td>Volatility, WinPmem</td><td>Processus actifs, connexions réseau en cours, clés de chiffrement, malware fileless</td></tr>
+                            <tr><td>Journaux Windows (EVTX)</td><td>Windows Event Log</td><td>Authentifications, créations de processus, modifications de compte, erreurs système</td></tr>
+                            <tr><td>Journaux Linux (syslog, auth.log)</td><td>Fichiers /var/log/</td><td>Connexions SSH, commandes sudo, accès aux fichiers, activité cron</td></tr>
+                            <tr><td>Registre Windows</td><td>Regedit, KAPE</td><td>Persistance (Run keys, services), logiciels installés, derniers fichiers ouverts</td></tr>
+                            <tr><td>Image disque</td><td>FTK Imager, dd</td><td>Fichiers supprimés, historique des activités, artefacts de navigation, timeline complète</td></tr>
+                            <tr><td>Artefacts réseau (PCAP)</td><td>Wireshark, tcpdump</td><td>Flux C&C, exfiltration de données, protocoles utilisés, indicateurs de compromission réseau</td></tr>
+                            <tr><td>Préfetch Windows</td><td>KAPE, Autopsy</td><td>Liste des exécutables lancés, horodatages d'exécution — preuve d'exécution de malware</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p>L'analyse de la mémoire vive (avec <strong>Volatility</strong>) est extrêmement puissante contre les attaques modernes, permettant d'identifier des processus cachés ou des DLL injectées (ex: <code>pstree</code>, <code>netscan</code>).</p>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Phase 4 — Éradication
+                    </h2>
+
+                    <p>L'éradication supprime la cause racine de l'incident. Elle ne doit intervenir qu'après avoir cartographié toute l'étendue de la compromission, au risque de voir l'attaquant revenir via des accès (backdoors) non détectés.</p>
+                    
+                    <p>Pour les systèmes faiblement compromis, un nettoyage (suppression de malwares, correction de la persistance) peut suffire. Mais pour les systèmes fortement compromis, la <strong>reconstruction complète depuis une image de référence propre (golden image)</strong> est la seule approche fiable.</p>
+                    <p>La <strong>rotation des identifiants</strong> (surtout les comptes à privilèges) est obligatoire, car les attaquants tentent souvent d'extraire les bases de mots de passe (SAM, NTDS, dump LSASS).</p>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Phase 5 — Rétablissement et Obligations Légales
+                    </h2>
+
+                    <p>Le rétablissement ramène les systèmes en production dans un état <strong>amélioré et durci</strong>. Il faut s'assurer que les correctifs ayant causé la brèche ont bien été appliqués avant de reconnecter les serveurs au réseau.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Étape</th>
+                                <th>Actions</th>
+                                <th>Points de vigilance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1. Validation</td><td>Confirmer que la menace est éradiquée avant toute restauration (scan antivirus, vérification des IOC)</td><td>Ne jamais restaurer depuis une sauvegarde potentiellement compromise</td></tr>
+                            <tr><td>2. Reconstruction</td><td>Réinstaller les systèmes compromis depuis une image de référence propre (golden image)</td><td>Documenter la version et la date de l'image utilisée</td></tr>
+                            <tr><td>3. Restauration des données</td><td>Restaurer les données depuis la dernière sauvegarde saine vérifiée</td><td>Vérifier l'intégrité des sauvegardes (hash) avant restauration</td></tr>
+                            <tr><td>4. Durcissement</td><td>Appliquer les correctifs manquants, renforcer les configurations, corriger la cause racine</td><td>Ne pas remettre en production sans corriger la vulnérabilité exploitée</td></tr>
+                            <tr><td>5. Tests</td><td>Valider le fonctionnement des services restaurés, tester les accès légitimes</td><td>Impliquer les équipes métier dans la validation fonctionnelle</td></tr>
+                            <tr><td>6. Surveillance renforcée</td><td>Activer une supervision accrue sur les systèmes rétablis pendant 30 à 90 jours</td><td>Définir des seuils d'alerte plus sensibles pour la période post-incident</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p>Des <strong>obligations de notification</strong> existent : la CNIL (sous 72h max) pour les données personnelles (RGPD), et l'ANSSI (sous 24h/72h) pour les entités visées par NIS2 ou DORA.</p>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Phase 6 — Post-Incident et Cas Pratique
+                    </h2>
+
+                    <p>Le Post-Mortem (REX) est une réunion "blameless" (sans recherche de coupable) pour analyser l'incident et améliorer les processus. Il génère un plan d'action (nouvelles règles SIEM, mises à jour des playbooks, corrections techniques).</p>
+
+                    <div class="callout callout-info">
+                        <span class="callout-icon">💡</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Cas Pratique : Ransomware LockBit 3.0</div>
+                            <p>Chez LogiTrans SA (450 salariés), une attaque LockBit chiffre des fichiers. La détection a lieu à 06h32, mais le chiffrement a commencé à 04h17. L'EDR trace l'origine à ADMIN-PC-07. Le patient zéro s'avère être un serveur Web DMZ non patché (vulnérabilité CMS). L'isolation rapide réseau (07h15) limite la casse. 42 serveurs sont restaurés grâce aux backups hors-ligne. Le REX a identifié 3 failles : manque de patching Web, mauvaise segmentation DMZ, et absence de surveillance du compte admin_backup hors horaires.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-9">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Trois grandes leçons synthétisent ce module :</p>
+                    <ol>
+                        <li><strong>La vitesse de réponse est déterminante, sans sacrifier la rigueur :</strong> Le cadre PICERF garantit que les actions rapides sont aussi les actions justes.</li>
+                        <li><strong>La forensique est un outil de défense à long terme :</strong> Les TTPs compris servent à bâtir de meilleures règles de détection et à anticiper.</li>
+                        <li><strong>La gestion des incidents est un sport collectif :</strong> Elle implique l'IT, les métiers, le SOC, le juridique et la direction. Des processus bien huilés avant la crise sont essentiels.</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">10</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>APT</td><td>Advanced Persistent Threat — acteur malveillant disposant de ressources importantes (souvent étatiques), opérant sur le long terme avec des techniques furtives et ciblées.</td></tr>
+                            <tr><td>Artefact forensique</td><td>Trace numérique laissée par une activité (légitime ou malveillante) sur un système, exploitable lors d'une investigation : logs, fichiers temporaires, entrées de registre, connexions réseau.</td></tr>
+                            <tr><td>C2 / C&C</td><td>Command and Control — infrastructure utilisée par un attaquant pour communiquer avec les systèmes compromis (malware, reverse shell, beacon).</td></tr>
+                            <tr><td>Chaîne de custody</td><td>Protocole documentant la préservation et le transfert des preuves numériques pour garantir leur recevabilité légale.</td></tr>
+                            <tr><td>CSIRT</td><td>Computer Security Incident Response Team — équipe spécialisée dans la réponse aux incidents de sécurité, pouvant être interne ou externe (prestataire).</td></tr>
+                            <tr><td>Eradication</td><td>Phase de réponse à incident visant à supprimer totalement la cause racine de l'incident (malware, backdoor, compte compromis) du système d'information.</td></tr>
+                            <tr><td>Fileless malware</td><td>Malware qui s'exécute uniquement en mémoire vive sans écrire de fichier sur le disque, échappant ainsi aux antivirus basés sur la signature de fichiers.</td></tr>
+                            <tr><td>Golden image</td><td>Image système de référence, propre et durcie, utilisée pour reconstruire rapidement des machines après un incident sans réinstallation manuelle.</td></tr>
+                            <tr><td>IOC</td><td>Indicator of Compromise — observable technique (hash, IP, domaine, clé de registre) permettant d'identifier une compromission dans les logs ou sur les systèmes.</td></tr>
+                            <tr><td>Lateral movement</td><td>Technique utilisée par un attaquant pour se déplacer progressivement au sein d'un SI après une intrusion initiale, en compromettant des machines supplémentaires.</td></tr>
+                            <tr><td>Patient zéro</td><td>Premier système compromis dans la chaîne d'infection, point d'entrée initial de l'attaquant dans le SI.</td></tr>
+                            <tr><td>Persistance</td><td>Technique permettant à un attaquant de maintenir un accès à un système compromis après un redémarrage ou une déconnexion (service malveillant, clé Run, tâche planifiée).</td></tr>
+                            <tr><td>Pivot</td><td>Technique consistant à utiliser un système compromis comme relai pour attaquer d'autres systèmes du réseau interne.</td></tr>
+                            <tr><td>Ransomware</td><td>Logiciel malveillant chiffrant les données des victimes et exigeant une rançon en échange de la clé de déchiffrement.</td></tr>
+                            <tr><td>RTO / RPO</td><td>Recovery Time Objective / Recovery Point Objective — indicateurs définissant respectivement la durée maximale d'indisponibilité acceptable et la perte de données tolérable après un incident.</td></tr>
+                            <tr><td>Threat hunting</td><td>Approche proactive de recherche des menaces non détectées par les outils automatiques, basée sur des hypothèses formulées à partir de la threat intelligence et du comportement du SI.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <footer class="course-footer">
+                <div class="footer-info">
+                    <p>Module suivant</p>
+                    <strong>CYB-046 — Configuration et supervision SIEM →</strong>
+                </div>
+                <div class="footer-actions">
+                    <a href="CYB-044.html" class="btn-nav">
+                        ← Module précédent
+                    </a>
+                    <a href="pdf/CYB-045.pdf" download="CYB-045.pdf" class="btn-dl">
+                        ⬇ Télécharger le PDF contenant le cours complet
+                    </a>
+                    <a href="CYB-046.html" class="btn-nav">
+                        Module suivant →
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        </div>
+    <script>
+        /* ===== SCROLL PROGRESS ===== */
+        const bar = document.getElementById('progress-bar');
+        const tocFill = document.getElementById('toc-prog-fill');
+        const tocPct = document.getElementById('toc-pct');
+
+        function updateScroll() {
+            const scrolled = window.scrollY;
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? scrolled / total * 100 : 0;
+            bar.style.width = pct + '%';
+            tocFill.style.width = pct + '%';
+            tocPct.textContent = Math.round(pct) + '%';
+        }
+
+        /* ===== ACTIVE TOC LINK ===== */
+        const sections = document.querySelectorAll('[id]');
+        const tocLinks = document.querySelectorAll('.toc-item a');
+
+        function updateTOC() {
+            let current = '';
+            sections.forEach(sec => {
+                const top = sec.getBoundingClientRect().top;
+                if (top <= 100) current = sec.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === current);
+            });
+        }
+
+        window.addEventListener('scroll', () => { updateScroll(); updateTOC(); }, { passive: true });
+        updateScroll(); updateTOC();
+
+        /* ===== THEME ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== COPY CODE ===== */
+        function copyCode(btn) {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copié ✓';
+                btn.style.color = '#4ade80';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+            });
+        }
+    </script>
+
+</body>
+</html>

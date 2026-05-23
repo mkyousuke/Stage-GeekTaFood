@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB-046 — Configuration et supervision d'un SIEM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME ===== */
+        :root {
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.3);
+            --radius: 16px;
+            --transition: .4s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.75);
+            --nav-bg: rgba(3,7,18,.8);
+            --callout-info: rgba(56,189,248,.08);
+            --callout-warn: rgba(251,191,36,.08);
+            --callout-tip: rgba(74,222,128,.08);
+            --callout-info-border: rgba(56,189,248,.3);
+            --callout-warn-border: rgba(251,191,36,.3);
+            --callout-tip-border: rgba(74,222,128,.3);
+        }
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e4eefb;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.75);
+            --glass-border: rgba(100,140,210,.18);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,.85);
+            --nav-bg: rgba(240,246,255,.88);
+            --callout-info: rgba(14,165,233,.07);
+            --callout-warn: rgba(217,119,6,.07);
+            --callout-tip: rgba(22,163,74,.07);
+            --callout-info-border: rgba(14,165,233,.3);
+            --callout-warn-border: rgba(217,119,6,.3);
+            --callout-tip-border: rgba(22,163,74,.3);
+        }
+
+        /* ===== RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ===== SCROLL PROGRESS ===== */
+        #progress-bar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6);
+            z-index: 9999; transition: width .1s linear;
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ===== BACKGROUND ===== */
+        .bg-shape {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        [data-theme="dark"] .bg-shape { opacity: .3; }
+        [data-theme="light"] .bg-shape { opacity: .12; }
+        .s1 { width:550px;height:550px;background:#1d4ed8;top:-150px;left:-120px; }
+        .s2 { width:600px;height:600px;background:#6d28d9;bottom:-200px;right:-150px;animation-delay:-8s; }
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(60px,80px) scale(1.1); }
+        }
+
+        /* ===== TOP NAV ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            height: 64px; padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500; transition: background var(--transition);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .4rem .9rem; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-soft);
+            text-decoration: none; font-weight: 600; font-size: .85rem;
+            transition: all .25s; cursor: pointer;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .breadcrumb a:hover { color: var(--accent); }
+        .breadcrumb-sep { opacity: .4; }
+
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .reading-time {
+            font-size: .8rem; color: var(--text-muted);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: .3rem .8rem; border-radius: 8px;
+            display: flex; align-items: center; gap: .3rem;
+        }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-areas: "toc content";
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 84px 2rem 5rem;
+            position: relative; z-index: 1;
+            align-items: start;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            grid-area: toc;
+            position: sticky; top: 80px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .toc::-webkit-scrollbar { width: 4px; }
+        .toc::-webkit-scrollbar-track { background: transparent; }
+        .toc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .toc-title {
+            font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: .9rem; padding-bottom: .7rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toc-list { list-style: none; display: flex; flex-direction: column; gap: .15rem; }
+
+        .toc-item a {
+            display: flex; align-items: flex-start; gap: .5rem;
+            padding: .4rem .6rem; border-radius: 8px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: .83rem; font-weight: 500; line-height: 1.4;
+            transition: all .2s;
+            border-left: 2px solid transparent;
+        }
+        .toc-item a:hover { color: var(--text); background: var(--glass); }
+        .toc-item a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.07); }
+        .toc-num { font-size: .72rem; color: var(--accent); font-weight: 700; flex-shrink: 0; padding-top: .1rem; }
+
+        /* Progress in TOC */
+        .toc-progress {
+            margin-top: 1.2rem; padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .toc-prog-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+        }
+        .toc-prog-label span:last-child { color: var(--accent); font-weight: 600; }
+        .toc-prog-track {
+            height: 4px; background: var(--bg3); border-radius: 50px; overflow: hidden;
+        }
+        .toc-prog-fill {
+            height: 100%; border-radius: 50px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            width: 0%; transition: width .3s ease;
+        }
+
+        /* ===== COURSE CONTENT ===== */
+        .content {
+            grid-area: content;
+            min-width: 0;
+        }
+
+        /* Course header */
+        .course-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: .8rem;
+            flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+
+        .tag-module {
+            background: rgba(56,189,248,.12);
+            color: #38bdf8; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 700; letter-spacing: .5px;
+            border: 1px solid rgba(56,189,248,.25);
+        }
+        .tag-cat {
+            background: rgba(129,140,248,.1);
+            color: #a78bfa; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 600;
+            border: 1px solid rgba(129,140,248,.2);
+        }
+        .status-done {
+            display: flex; align-items: center; gap: .35rem;
+            background: rgba(74,222,128,.1); color: #4ade80;
+            border: 1px solid rgba(74,222,128,.2);
+            padding: .3rem .8rem; border-radius: 30px;
+            font-size: .78rem; font-weight: 600;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .course-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 800; line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f1f5f9 40%, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .course-header h1 {
+            background: linear-gradient(135deg, #0f172a 40%, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .course-intro {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-soft); margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+        }
+        .skill-tag {
+            font-size: .75rem; font-weight: 600;
+            padding: .25rem .7rem; border-radius: 7px;
+            background: var(--bg3);
+            color: var(--text-soft);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ===== CONTENT BODY ===== */
+        .content-body {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sections */
+        .section { margin-bottom: 3rem; }
+        .section:last-of-type { margin-bottom: 0; }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem; font-weight: 700;
+            color: var(--text); margin-bottom: 1.1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .section-num {
+            font-size: .8rem; font-weight: 700;
+            color: var(--accent); background: rgba(56,189,248,.1);
+            border: 1px solid rgba(56,189,248,.2);
+            padding: .2rem .55rem; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content-body p {
+            font-size: 1rem; line-height: 1.8;
+            color: var(--text-soft); margin-bottom: 1.1rem;
+        }
+
+        /* Lists */
+        .content-body ul, .content-body ol {
+            margin: .5rem 0 1.2rem 1.2rem;
+            color: var(--text-soft);
+        }
+        .content-body li {
+            font-size: 1rem; line-height: 1.75;
+            margin-bottom: .4rem; padding-left: .3rem;
+        }
+        .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            margin: 1.4rem 0; display: flex; gap: .9rem; align-items: flex-start;
+        }
+        .callout-info {
+            background: var(--callout-info);
+            border: 1px solid var(--callout-info-border);
+            border-left: 3px solid #38bdf8;
+        }
+        .callout-warn {
+            background: var(--callout-warn);
+            border: 1px solid var(--callout-warn-border);
+            border-left: 3px solid #fbbf24;
+        }
+        .callout-tip {
+            background: var(--callout-tip);
+            border: 1px solid var(--callout-tip-border);
+            border-left: 3px solid #4ade80;
+        }
+        .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+        .callout-body { flex: 1; }
+        .callout-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; margin-bottom: .3rem;
+        }
+        .callout-info .callout-label { color: #38bdf8; }
+        .callout-warn .callout-label { color: #fbbf24; }
+        .callout-tip .callout-label { color: #4ade80; }
+        .callout-body p {
+            font-size: .92rem; margin-bottom: 0; color: var(--text-soft);
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; font-weight: 500;
+            background: var(--bg3); color: var(--accent);
+            padding: .15rem .45rem; border-radius: 5px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--bg2); border: 1px solid var(--glass-border);
+            border-radius: 12px; overflow: hidden; margin: 1.2rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .6rem 1rem; border-bottom: 1px solid var(--glass-border);
+            background: var(--bg3);
+        }
+        .code-lang {
+            font-size: .72rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .copy-btn {
+            font-size: .72rem; font-weight: 600; color: var(--text-muted);
+            background: transparent; border: 1px solid var(--glass-border);
+            padding: .2rem .6rem; border-radius: 5px; cursor: pointer;
+            transition: all .2s;
+        }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .code-block pre {
+            padding: 1.1rem 1.2rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; line-height: 1.65;
+            color: var(--text-soft);
+            margin: 0;
+        }
+
+        /* Definition table */
+        .def-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .def-table th {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-muted);
+            padding: .7rem 1rem; text-align: left;
+            background: var(--bg3); border-bottom: 1px solid var(--glass-border);
+        }
+        .def-table th:first-child { border-radius: 8px 0 0 0; }
+        .def-table th:last-child { border-radius: 0 8px 0 0; }
+        .def-table td {
+            padding: .75rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-soft); vertical-align: top;
+        }
+        .def-table tr:last-child td { border-bottom: none; }
+        .def-table tr:hover td { background: var(--glass); }
+        .def-table td:first-child { font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: .82rem; white-space: nowrap; }
+
+        /* ===== COURSE FOOTER ===== */
+        .course-footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
+
+        .btn-dl {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; border-radius: 50px; text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all .3s;
+        }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
+
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: var(--text-soft);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 50px; text-decoration: none;
+            transition: all .3s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-areas: "content";
+            }
+            .toc { display: none; }
+            .breadcrumb { display: none; }
+        }
+        @media (max-width: 600px) {
+            .content-body, .course-header, .course-footer { padding: 1.5rem; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
+
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="btn-back">← Retour</a>
+            <div class="breadcrumb">
+                <a href="../index.html">Formations</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>CYB-046</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="reading-time">⏱ ~18 min de lecture</div>
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <aside class="toc">
+            <div class="toc-title">Table des matières</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#intro" data-section="intro">
+                        <span class="toc-num">00</span>Introduction
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-1" data-section="section-1">
+                        <span class="toc-num">01</span>Panorama des SIEM Open Source
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-2" data-section="section-2">
+                        <span class="toc-num">02</span>Architecture et Déploiement de Wazuh
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-3" data-section="section-3">
+                        <span class="toc-num">03</span>Règles de Détection dans Wazuh
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-4" data-section="section-4">
+                        <span class="toc-num">04</span>Architecture et Configuration de l'ELK Stack
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-5" data-section="section-5">
+                        <span class="toc-num">05</span>Règles de Détection et Use Cases
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Tableaux de Bord et Supervision
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Performance, Rétention et Maintenance
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Cas Pratique : SIEM pour ETI
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-9" data-section="section-9">
+                        <span class="toc-num">09</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">10</span>Glossaire
+                    </a>
+                </li>
+            </ul>
+
+            <div class="toc-progress">
+                <div class="toc-prog-label">
+                    <span>Progression</span>
+                    <span id="toc-pct">0%</span>
+                </div>
+                <div class="toc-prog-track">
+                    <div class="toc-prog-fill" id="toc-prog-fill"></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+
+            <header class="course-header" id="intro">
+                <div class="header-meta">
+                    <span class="tag-module">CYB-046</span>
+                    <span class="tag-cat">Supervision & SIEM</span>
+                    <span class="status-done"><span class="status-dot"></span>Terminé</span>
+                </div>
+                <h1>Configuration et supervision d'un SIEM</h1>
+                <p class="course-intro">
+                    Au cœur de tout Security Operations Center opérationnel se trouve une infrastructure technologique indispensable : le SIEM. Security Information and Event Management — derrière cet acronyme se cache la plateforme qui centralise, corrèle et valorise l'ensemble des événements de sécurité d'un système d'information. Sans SIEM, les analystes naviguent dans un océan de logs dispersés sur des dizaines de systèmes hétérogènes, incapables de relier entre eux les événements qui, mis bout à bout, révèlent une attaque en cours.
+                </p>
+                <div class="skill-row">
+                    <span class="skill-tag">Wazuh</span>
+                    <span class="skill-tag">ELK Stack</span>
+                    <span class="skill-tag">Elasticsearch</span>
+                    <span class="skill-tag">Logstash</span>
+                    <span class="skill-tag">Kibana</span>
+                    <span class="skill-tag">FIM</span>
+                    <span class="skill-tag">SCA</span>
+                    <span class="skill-tag">MITRE ATT&CK</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <p>L'accessibilité des solutions SIEM open source a transformé ce domaine autrefois réservé aux grandes entreprises dotées de budgets conséquents. Des plateformes comme Wazuh ou l'ELK Stack offrent aujourd'hui des capacités comparables aux solutions commerciales leaders — Splunk, IBM QRadar, Microsoft Sentinel — à un coût d'acquisition nul, au prix d'un investissement en compétences techniques pour leur déploiement et leur maintien en condition opérationnelle.</p>
+                
+                <p>Ce cours explore en profondeur la mise en place et la supervision d'un SIEM open source, en couvrant l'ensemble du cycle : choix de la solution adaptée au contexte, architecture et déploiement, configuration des sources de collecte, création et optimisation des règles de détection, construction des tableaux de bord de supervision, et mesure de la performance.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <p>À l'issue de ce cours, l'apprenant doit être capable de comprendre le rôle d'un SIEM, d'installer et configurer Wazuh et l'ELK Stack, de développer des règles de détection (notamment mappées sur MITRE ATT&CK), de construire des tableaux de bord Kibana et de gérer la politique de rétention (ILM).</p>
+                    </div>
+                </div>
+
+                <div class="section" id="section-1">
+                    <h2 class="section-title">
+                        <span class="section-num">01</span>
+                        Panorama des SIEM Open Source
+                    </h2>
+
+                    <p>Un SIEM remplit cinq fonctions essentielles qui structurent son architecture et guident son déploiement :</p>
+                    <ul>
+                        <li><strong>Collecte :</strong> Agréger les événements de sécurité issus de l'ensemble des sources.</li>
+                        <li><strong>Normalisation :</strong> Transformer ces événements hétérogènes en un format unifié.</li>
+                        <li><strong>Enrichissement :</strong> Ajouter du contexte (GeoIP, threat intelligence, données CMDB).</li>
+                        <li><strong>Corrélation :</strong> Mettre en relation des événements pour détecter des patterns d'attaque.</li>
+                        <li><strong>Alerte et reporting :</strong> Fournir les indicateurs aux analystes et à la direction.</li>
+                    </ul>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Critère</th>
+                                <th>Wazuh</th>
+                                <th>ELK Stack</th>
+                                <th>Graylog</th>
+                                <th>OpenSearch Security</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Licence</td>
+                                <td>Open source (GPL)</td>
+                                <td>Open source / Elastic</td>
+                                <td>Open source (SSPL)</td>
+                                <td>Open source (Apache 2)</td>
+                            </tr>
+                            <tr>
+                                <td>Architecture</td>
+                                <td>Agent + Manager + Indexer</td>
+                                <td>Beats + Logstash + ES + Kibana</td>
+                                <td>Sidecar + Graylog + MongoDB + OS</td>
+                                <td>Collecteur + OpenSearch + Dashboard</td>
+                            </tr>
+                            <tr>
+                                <td>Facilité de déploiement</td>
+                                <td>Élevée (tout-en-un)</td>
+                                <td>Moyenne (composants séparés)</td>
+                                <td>Élevée (interface intuitive)</td>
+                                <td>Moyenne</td>
+                            </tr>
+                            <tr>
+                                <td>Détection intégrée</td>
+                                <td>Oui (règles HIDS, FIM, SCA)</td>
+                                <td>Partielle (via règles Elastic)</td>
+                                <td>Non native (via pipelines)</td>
+                                <td>Partielle</td>
+                            </tr>
+                            <tr>
+                                <td>Support Windows</td>
+                                <td>Oui (agent natif)</td>
+                                <td>Oui (Winlogbeat)</td>
+                                <td>Oui (NXLog / Winlogbeat)</td>
+                                <td>Oui (agent)</td>
+                            </tr>
+                            <tr>
+                                <td>MITRE ATT&CK mapping</td>
+                                <td>Oui (natif)</td>
+                                <td>Oui (via Elastic Security)</td>
+                                <td>Non natif</td>
+                                <td>Partiel</td>
+                            </tr>
+                            <tr>
+                                <td>Cas d'usage idéal</td>
+                                <td>PME / ETI, SOC débutant</td>
+                                <td>SOC mature, gros volumes</td>
+                                <td>PME, centralisation logs</td>
+                                <td>Migration depuis ES payant</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Ce comparatif met en évidence deux positionnements complémentaires : Wazuh est idéal pour un SOC complet et rapide à déployer, et l'ELK Stack pour les équipes matures cherchant une flexibilité et une scalabilité totale.</p>
+                </div>
+
+                <div class="section" id="section-2">
+                    <h2 class="section-title">
+                        <span class="section-num">02</span>
+                        Architecture et Déploiement de Wazuh
+                    </h2>
+
+                    <p>L'architecture de Wazuh repose sur quatre composants principaux qui interagissent selon une topologie en étoile :</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Composant</th>
+                                <th>Rôle</th>
+                                <th>Technologies sous-jacentes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Wazuh Agent</td>
+                                <td>Collecte des événements sur chaque endpoint supervisé et envoi au manager</td>
+                                <td>Daemon léger (C/C++), multiplateforme : Linux, Windows, macOS, Solaris</td>
+                            </tr>
+                            <tr>
+                                <td>Wazuh Manager</td>
+                                <td>Réception, décodage, analyse et corrélation des événements ; génération des alertes</td>
+                                <td>Démon ossec-analysisd, règles XML, moteur de décodage</td>
+                            </tr>
+                            <tr>
+                                <td>Wazuh Indexer</td>
+                                <td>Stockage et indexation des alertes et des événements pour la recherche et la visualisation</td>
+                                <td>OpenSearch (fork d'Elasticsearch 7.10)</td>
+                            </tr>
+                            <tr>
+                                <td>Wazuh Dashboard</td>
+                                <td>Interface web de supervision, visualisation des alertes, gestion des agents et des règles</td>
+                                <td>OpenSearch Dashboards (fork de Kibana)</td>
+                            </tr>
+                            <tr>
+                                <td>Filebeat</td>
+                                <td>Transport des alertes du manager vers l'indexer, avec chiffrement TLS</td>
+                                <td>Elastic Beats (Go)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>L'installation peut s'effectuer de manière automatisée via un script tout-en-un fourni par Wazuh :</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-lang">bash — Déploiement automatisé Wazuh</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre>curl -sO https://packages.wazuh.com/4.x/wazuh-install.sh && bash wazuh-install.sh -a</pre>
+                    </div>
+
+                    <p>Un agent Wazuh doit être déployé sur chaque système à superviser. Le fichier <code>/var/ossec/etc/ossec.conf</code> est le fichier de configuration principal de l'agent Linux (définition des journaux, répertoires à surveiller pour le FIM, SCA, etc.).</p>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        Règles de Détection dans Wazuh
+                    </h2>
+
+                    <p>Le moteur de détection de Wazuh repose sur deux composants distincts : les <strong>décodeurs</strong> (extracteurs de champs) et les <strong>règles</strong> (logique de détection sur les champs extraits).</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Niveau</th>
+                                <th>Criticité</th>
+                                <th>Exemples de règles</th>
+                                <th>Action typique</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0 – 3</td>
+                                <td>Informationnel</td>
+                                <td>Démarrage de service, connexion réussie standard</td>
+                                <td>Journalisation sans alerte</td>
+                            </tr>
+                            <tr>
+                                <td>4 – 7</td>
+                                <td>Faible à modéré</td>
+                                <td>Échec d'authentification unique, modification de fichier non critique</td>
+                                <td>Alerte faible, revue périodique</td>
+                            </tr>
+                            <tr>
+                                <td>8 – 11</td>
+                                <td>Élevé</td>
+                                <td>Brute force détecté, rootcheck positif, exécution de commande suspecte</td>
+                                <td>Alerte immédiate analyste N1</td>
+                            </tr>
+                            <tr>
+                                <td>12 – 15</td>
+                                <td>Critique</td>
+                                <td>Intrusion confirmée, compromission de compte root, malware détecté</td>
+                                <td>Escalade N2, réponse active possible</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Les règles personnalisées utilisent des identifiants compris entre 100 000 et 999 999. Wazuh intègre également des modules spécialisés : le <strong>File Integrity Monitoring (FIM)</strong> pour alerter sur les modifications de fichiers critiques, et le <strong>Security Configuration Assessment (SCA)</strong> pour auditer les benchmarks (CIS, PCI-DSS).</p>
+                </div>
+
+                <div class="section" id="section-4">
+                    <h2 class="section-title">
+                        <span class="section-num">04</span>
+                        Architecture et Configuration de l'ELK Stack
+                    </h2>
+
+                    <p>L'ELK Stack est la solution de gestion de logs la plus déployée. Sa modularité permet de s'adapter à n'importe quelle architecture :</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Étape</th>
+                                <th>Composant</th>
+                                <th>Fonction</th>
+                                <th>Configuration clé</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1. Collecte</td>
+                                <td>Beats (Filebeat, Winlogbeat, Auditbeat)</td>
+                                <td>Lecture des sources de logs sur les endpoints et envoi vers Logstash ou ES</td>
+                                <td>Fichier beats.yml : chemins de logs, output, TLS</td>
+                            </tr>
+                            <tr>
+                                <td>2. Traitement</td>
+                                <td>Logstash</td>
+                                <td>Parsing, transformation, enrichissement et filtrage des événements</td>
+                                <td>Pipeline input / filter (grok, mutate, geoip) / output</td>
+                            </tr>
+                            <tr>
+                                <td>3. Indexation</td>
+                                <td>Elasticsearch</td>
+                                <td>Stockage distribué, indexation full-text et recherche des événements</td>
+                                <td>Index templates, ILM policies, mapping</td>
+                            </tr>
+                            <tr>
+                                <td>4. Visualisation</td>
+                                <td>Kibana</td>
+                                <td>Tableaux de bord, exploration des données, alerting et règles de détection</td>
+                                <td>Kibana.yml, espaces, RBAC, alertes KQL/EQL</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Le bloc <code>filter</code> de Logstash est au cœur du pipeline. Le plugin <strong>grok</strong> parse les messages via des expressions régulières, <strong>mutate</strong> modifie les champs, et <strong>geoip</strong> enrichit les IP en données de géolocalisation pour les cartes Kibana.</p>
+                </div>
+
+                <div class="section" id="section-5">
+                    <h2 class="section-title">
+                        <span class="section-num">05</span>
+                        Règles de Détection et Use Cases
+                    </h2>
+
+                    <p>La suite Elastic Security propose un moteur de détection basé sur des règles exprimées en KQL (Kibana Query Language) ou EQL (Event Query Language), idéales pour des séquences d'événements temporels.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Use case de détection</th>
+                                <th>Source de logs</th>
+                                <th>Technique ATT&CK</th>
+                                <th>Logique de détection</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Brute force SSH</td>
+                                <td>auth.log / Wazuh agent</td>
+                                <td>T1110</td>
+                                <td>Plus de 10 Event ID 5716 ou messages pam_unix en 5 minutes depuis la même source</td>
+                            </tr>
+                            <tr>
+                                <td>Création de compte local</td>
+                                <td>Windows Event Log (4720)</td>
+                                <td>T1136</td>
+                                <td>Event ID 4720 sur un poste non serveur, hors plage horaire administrative</td>
+                            </tr>
+                            <tr>
+                                <td>Exécution PowerShell encodé</td>
+                                <td>Sysmon (Event ID 1) / EDR</td>
+                                <td>T1059.001</td>
+                                <td>Présence du flag -EncodedCommand ou -enc dans la ligne de commande PowerShell</td>
+                            </tr>
+                            <tr>
+                                <td>Connexion depuis pays inhabituel</td>
+                                <td>VPN / Firewall / AD</td>
+                                <td>T1078</td>
+                                <td>Géolocalisation IP hors liste blanche des pays autorisés, corrélée à une authentification réussie</td>
+                            </tr>
+                            <tr>
+                                <td>Modification de fichier critique</td>
+                                <td>Wazuh FIM / Auditd</td>
+                                <td>T1565</td>
+                                <td>Modification de /etc/passwd, /etc/sudoers ou d'un binaire système surveillé</td>
+                            </tr>
+                            <tr>
+                                <td>Scan de ports interne</td>
+                                <td>IDS Suricata / Firewall</td>
+                                <td>T1046</td>
+                                <td>Source interne générant des connexions vers plus de 20 ports distincts en moins d'une minute</td>
+                            </tr>
+                            <tr>
+                                <td>Service Windows installé</td>
+                                <td>Windows Event Log (7045)</td>
+                                <td>T1543.003</td>
+                                <td>Event ID 7045 pour un service avec un nom ou chemin d'exécutable inhabituel</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-tip">
+                        <span class="callout-icon">✅</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Réduction des faux positifs</div>
+                            <p>Ne désactivez jamais une règle à cause de faux positifs. Affinez-la progressivement via des exceptions (whitelist), des seuils (threshold) et de la contextualisation temporelle ou géographique.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Tableaux de Bord et Supervision
+                    </h2>
+
+                    <p>Un tableau de bord SOC efficace est une interface de pilotage. L'analyste N1 nécessite une vue temps réel (volumes, alertes en attente, top sources), tandis que le SOC Manager privilégie les KPIs et les tendances.</p>
+                    
+                    <p>Dans <strong>Kibana</strong>, l'onglet <em>Visualize Library</em> permet d'assembler des graphiques de tous types. Le dashboard Wazuh natif intègre également une visualisation de la matrice MITRE ATT&CK en temps réel.</p>
+                    
+                    <p>Enfin, l'automatisation des notifications (Slack, PagerDuty, emails via le <code>ossec.conf</code> de Wazuh ou les Connectors de Kibana) est cruciale pour réagir aux alertes critiques en dehors d'un regard continu sur l'écran.</p>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Performance, Rétention et Maintenance
+                    </h2>
+
+                    <p>Pour prévenir les défaillances de détection, le SOC surveille la santé de son SIEM via des KPIs précis :</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>KPI</th>
+                                <th>Définition</th>
+                                <th>Cible recommandée</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Volume d'événements ingérés / jour</td>
+                                <td>Nombre total d'événements collectés par le SIEM toutes sources confondues</td>
+                                <td>Baseline à établir, surveiller les dérives > 20 %</td>
+                            </tr>
+                            <tr>
+                                <td>Taux de couverture des sources</td>
+                                <td>Pourcentage des actifs critiques dont les logs sont ingérés dans le SIEM</td>
+                                <td>> 95 % des actifs critiques</td>
+                            </tr>
+                            <tr>
+                                <td>Latence d'ingestion</td>
+                                <td>Délai entre génération d'un événement et son indexation dans le SIEM</td>
+                                <td>< 60 secondes</td>
+                            </tr>
+                            <tr>
+                                <td>Taux de faux positifs</td>
+                                <td>Proportion d'alertes ne correspondant pas à un incident réel</td>
+                                <td>< 10 % des alertes générées</td>
+                            </tr>
+                            <tr>
+                                <td>Couverture ATT&CK</td>
+                                <td>Pourcentage de techniques MITRE ATT&CK couvertes par au moins une règle active</td>
+                                <td>> 50 % (progressif)</td>
+                            </tr>
+                            <tr>
+                                <td>Disponibilité du SIEM</td>
+                                <td>Uptime de l'infrastructure SIEM (indexer, manager, dashboard)</td>
+                                <td>> 99,5 %</td>
+                            </tr>
+                            <tr>
+                                <td>Durée de rétention effective</td>
+                                <td>Période réelle sur laquelle les événements sont interrogeables</td>
+                                <td>> 90 jours (hot), > 12 mois (archive)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>La gestion de la politique <strong>ILM (Index Lifecycle Management)</strong> assure le bon stockage des données dans des phases hot, warm, cold puis la suppression ou l'archivage en respectant les cadres normatifs (NIS2, DORA).</p>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Cas Pratique : Déploiement d'un SIEM pour une ETI
+                    </h2>
+
+                    <div class="callout callout-info">
+                        <span class="callout-icon">💡</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Scénario MediConsult SA</div>
+                            <p>MediConsult SA (180 salariés, données de santé HDS/NIS2) a déployé Wazuh. La politique ISM garantit une rétention de 12 mois. Le déploiement des agents a atteint 100% des serveurs critiques et le FortiGate envoie ses logs Syslog. Au bout de six semaines, la couverture ATT&CK est de 38 %, 23 alertes/jour (dont 18 % de faux positifs, en baisse) et 3 incidents réels traités.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-9">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Trois grandes leçons synthétisent ce module :</p>
+                    <ol>
+                        <li><strong>La qualité de la collecte conditionne la qualité de la détection :</strong> Avant de développer des règles complexes, assurez-vous que les sources critiques sont collectées et correctement normalisées.</li>
+                        <li><strong>Le SIEM est un outil vivant :</strong> Les menaces évoluent, et le SIEM doit s'adapter. La maintenance opérationnelle et l'affinement continu des règles sont obligatoires.</li>
+                        <li><strong>La mesure est indispensable à l'amélioration :</strong> Sans suivi des KPIs et de la couverture ATT&CK, il est impossible de justifier les budgets ou d'identifier les lacunes du SIEM.</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">10</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Agent SIEM</td>
+                                <td>Logiciel léger déployé sur chaque endpoint supervisé, chargé de collecter les événements locaux et de les transmettre au manager.</td>
+                            </tr>
+                            <tr>
+                                <td>Auditbeat</td>
+                                <td>Agent Elastic spécialisé dans la collecte des événements d'audit système (syscalls Linux, fichiers modifiés).</td>
+                            </tr>
+                            <tr>
+                                <td>Corrélation</td>
+                                <td>Mise en relation de plusieurs événements de sources différentes pour détecter un comportement malveillant composite.</td>
+                            </tr>
+                            <tr>
+                                <td>Decoder Wazuh</td>
+                                <td>Composant du manager Wazuh chargé d'extraire les champs structurés (IP, utilisateur, action) d'un message de log brut via des expressions régulières.</td>
+                            </tr>
+                            <tr>
+                                <td>ECS</td>
+                                <td>Elastic Common Schema — schéma de normalisation des champs de logs développé par Elastic.</td>
+                            </tr>
+                            <tr>
+                                <td>EQL</td>
+                                <td>Event Query Language — langage de requête Elastic permettant d'exprimer des séquences d'événements temporels.</td>
+                            </tr>
+                            <tr>
+                                <td>FIM</td>
+                                <td>File Integrity Monitoring — fonctionnalité surveillant les modifications de fichiers et répertoires critiques.</td>
+                            </tr>
+                            <tr>
+                                <td>Grok</td>
+                                <td>Langage de pattern matching utilisé dans Logstash et Graylog pour parser des logs non structurés.</td>
+                            </tr>
+                            <tr>
+                                <td>ILM</td>
+                                <td>Index Lifecycle Management — politique définissant automatiquement les phases de vie d'un index (hot, warm, cold, delete).</td>
+                            </tr>
+                            <tr>
+                                <td>SCA</td>
+                                <td>Security Configuration Assessment — module Wazuh vérifiant la conformité de la configuration par rapport à des benchmarks (CIS, PCI-DSS).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <footer class="course-footer">
+                <div class="footer-info">
+                    <p>Module suivant</p>
+                    <strong>CYB-047 — Veille et intelligence cyber (CTI) →</strong>
+                </div>
+                <div class="footer-actions">
+                    <a href="CYB-045.html" class="btn-nav">
+                        ← Module précédent
+                    </a>
+                    <a href="pdf/CYB-046.pdf" download="CYB-046.pdf" class="btn-dl">
+                        ⬇ Télécharger le PDF contenant le cours complet
+                    </a>
+                    <a href="CYB-047.html" class="btn-nav">
+                        Module suivant →
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        </div>
+    <script>
+        /* ===== SCROLL PROGRESS ===== */
+        const bar = document.getElementById('progress-bar');
+        const tocFill = document.getElementById('toc-prog-fill');
+        const tocPct = document.getElementById('toc-pct');
+
+        function updateScroll() {
+            const scrolled = window.scrollY;
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? scrolled / total * 100 : 0;
+            bar.style.width = pct + '%';
+            tocFill.style.width = pct + '%';
+            tocPct.textContent = Math.round(pct) + '%';
+        }
+
+        /* ===== ACTIVE TOC LINK ===== */
+        const sections = document.querySelectorAll('[id]');
+        const tocLinks = document.querySelectorAll('.toc-item a');
+
+        function updateTOC() {
+            let current = '';
+            sections.forEach(sec => {
+                const top = sec.getBoundingClientRect().top;
+                if (top <= 100) current = sec.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === current);
+            });
+        }
+
+        window.addEventListener('scroll', () => { updateScroll(); updateTOC(); }, { passive: true });
+        updateScroll(); updateTOC();
+
+        /* ===== THEME ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== COPY CODE ===== */
+        function copyCode(btn) {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copié ✓';
+                btn.style.color = '#4ade80';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+            });
+        }
+    </script>
+
+</body>
+</html>

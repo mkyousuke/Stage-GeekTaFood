@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB-044 — Initiation à un SOC</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME ===== */
+        :root {
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.3);
+            --radius: 16px;
+            --transition: .4s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.75);
+            --nav-bg: rgba(3,7,18,.8);
+            --callout-info: rgba(56,189,248,.08);
+            --callout-warn: rgba(251,191,36,.08);
+            --callout-tip: rgba(74,222,128,.08);
+            --callout-info-border: rgba(56,189,248,.3);
+            --callout-warn-border: rgba(251,191,36,.3);
+            --callout-tip-border: rgba(74,222,128,.3);
+        }
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e4eefb;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.75);
+            --glass-border: rgba(100,140,210,.18);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,.85);
+            --nav-bg: rgba(240,246,255,.88);
+            --callout-info: rgba(14,165,233,.07);
+            --callout-warn: rgba(217,119,6,.07);
+            --callout-tip: rgba(22,163,74,.07);
+            --callout-info-border: rgba(14,165,233,.3);
+            --callout-warn-border: rgba(217,119,6,.3);
+            --callout-tip-border: rgba(22,163,74,.3);
+        }
+
+        /* ===== RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ===== SCROLL PROGRESS ===== */
+        #progress-bar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6);
+            z-index: 9999; transition: width .1s linear;
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ===== BACKGROUND ===== */
+        .bg-shape {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        [data-theme="dark"] .bg-shape { opacity: .3; }
+        [data-theme="light"] .bg-shape { opacity: .12; }
+        .s1 { width:550px;height:550px;background:#1d4ed8;top:-150px;left:-120px; }
+        .s2 { width:600px;height:600px;background:#6d28d9;bottom:-200px;right:-150px;animation-delay:-8s; }
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(60px,80px) scale(1.1); }
+        }
+
+        /* ===== TOP NAV ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            height: 64px; padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500; transition: background var(--transition);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .4rem .9rem; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-soft);
+            text-decoration: none; font-weight: 600; font-size: .85rem;
+            transition: all .25s; cursor: pointer;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .breadcrumb a:hover { color: var(--accent); }
+        .breadcrumb-sep { opacity: .4; }
+
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .reading-time {
+            font-size: .8rem; color: var(--text-muted);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: .3rem .8rem; border-radius: 8px;
+            display: flex; align-items: center; gap: .3rem;
+        }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-areas: "toc content";
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 84px 2rem 5rem;
+            position: relative; z-index: 1;
+            align-items: start;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            grid-area: toc;
+            position: sticky; top: 80px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .toc::-webkit-scrollbar { width: 4px; }
+        .toc::-webkit-scrollbar-track { background: transparent; }
+        .toc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .toc-title {
+            font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: .9rem; padding-bottom: .7rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toc-list { list-style: none; display: flex; flex-direction: column; gap: .15rem; }
+
+        .toc-item a {
+            display: flex; align-items: flex-start; gap: .5rem;
+            padding: .4rem .6rem; border-radius: 8px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: .83rem; font-weight: 500; line-height: 1.4;
+            transition: all .2s;
+            border-left: 2px solid transparent;
+        }
+        .toc-item a:hover { color: var(--text); background: var(--glass); }
+        .toc-item a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.07); }
+        .toc-num { font-size: .72rem; color: var(--accent); font-weight: 700; flex-shrink: 0; padding-top: .1rem; }
+
+        /* Progress in TOC */
+        .toc-progress {
+            margin-top: 1.2rem; padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .toc-prog-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+        }
+        .toc-prog-label span:last-child { color: var(--accent); font-weight: 600; }
+        .toc-prog-track {
+            height: 4px; background: var(--bg3); border-radius: 50px; overflow: hidden;
+        }
+        .toc-prog-fill {
+            height: 100%; border-radius: 50px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            width: 0%; transition: width .3s ease;
+        }
+
+        /* ===== COURSE CONTENT ===== */
+        .content {
+            grid-area: content;
+            min-width: 0;
+        }
+
+        /* Course header */
+        .course-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: .8rem;
+            flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+
+        .tag-module {
+            background: rgba(56,189,248,.12);
+            color: #38bdf8; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 700; letter-spacing: .5px;
+            border: 1px solid rgba(56,189,248,.25);
+        }
+        .tag-cat {
+            background: rgba(129,140,248,.1);
+            color: #a78bfa; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 600;
+            border: 1px solid rgba(129,140,248,.2);
+        }
+        .status-done {
+            display: flex; align-items: center; gap: .35rem;
+            background: rgba(74,222,128,.1); color: #4ade80;
+            border: 1px solid rgba(74,222,128,.2);
+            padding: .3rem .8rem; border-radius: 30px;
+            font-size: .78rem; font-weight: 600;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .course-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 800; line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f1f5f9 40%, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .course-header h1 {
+            background: linear-gradient(135deg, #0f172a 40%, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .course-intro {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-soft); margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+        }
+        .skill-tag {
+            font-size: .75rem; font-weight: 600;
+            padding: .25rem .7rem; border-radius: 7px;
+            background: var(--bg3);
+            color: var(--text-soft);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ===== CONTENT BODY ===== */
+        .content-body {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sections */
+        .section { margin-bottom: 3rem; }
+        .section:last-of-type { margin-bottom: 0; }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem; font-weight: 700;
+            color: var(--text); margin-bottom: 1.1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .section-num {
+            font-size: .8rem; font-weight: 700;
+            color: var(--accent); background: rgba(56,189,248,.1);
+            border: 1px solid rgba(56,189,248,.2);
+            padding: .2rem .55rem; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content-body p {
+            font-size: 1rem; line-height: 1.8;
+            color: var(--text-soft); margin-bottom: 1.1rem;
+        }
+
+        /* Lists */
+        .content-body ul, .content-body ol {
+            margin: .5rem 0 1.2rem 1.2rem;
+            color: var(--text-soft);
+        }
+        .content-body li {
+            font-size: 1rem; line-height: 1.75;
+            margin-bottom: .4rem; padding-left: .3rem;
+        }
+        .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            margin: 1.4rem 0; display: flex; gap: .9rem; align-items: flex-start;
+        }
+        .callout-info {
+            background: var(--callout-info);
+            border: 1px solid var(--callout-info-border);
+            border-left: 3px solid #38bdf8;
+        }
+        .callout-warn {
+            background: var(--callout-warn);
+            border: 1px solid var(--callout-warn-border);
+            border-left: 3px solid #fbbf24;
+        }
+        .callout-tip {
+            background: var(--callout-tip);
+            border: 1px solid var(--callout-tip-border);
+            border-left: 3px solid #4ade80;
+        }
+        .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+        .callout-body { flex: 1; }
+        .callout-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; margin-bottom: .3rem;
+        }
+        .callout-info .callout-label { color: #38bdf8; }
+        .callout-warn .callout-label { color: #fbbf24; }
+        .callout-tip .callout-label { color: #4ade80; }
+        .callout-body p {
+            font-size: .92rem; margin-bottom: 0; color: var(--text-soft);
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; font-weight: 500;
+            background: var(--bg3); color: var(--accent);
+            padding: .15rem .45rem; border-radius: 5px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--bg2); border: 1px solid var(--glass-border);
+            border-radius: 12px; overflow: hidden; margin: 1.2rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .6rem 1rem; border-bottom: 1px solid var(--glass-border);
+            background: var(--bg3);
+        }
+        .code-lang {
+            font-size: .72rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .copy-btn {
+            font-size: .72rem; font-weight: 600; color: var(--text-muted);
+            background: transparent; border: 1px solid var(--glass-border);
+            padding: .2rem .6rem; border-radius: 5px; cursor: pointer;
+            transition: all .2s;
+        }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .code-block pre {
+            padding: 1.1rem 1.2rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; line-height: 1.65;
+            color: var(--text-soft);
+            margin: 0;
+        }
+
+        /* Definition table */
+        .def-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .def-table th {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-muted);
+            padding: .7rem 1rem; text-align: left;
+            background: var(--bg3); border-bottom: 1px solid var(--glass-border);
+        }
+        .def-table th:first-child { border-radius: 8px 0 0 0; }
+        .def-table th:last-child { border-radius: 0 8px 0 0; }
+        .def-table td {
+            padding: .75rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-soft); vertical-align: top;
+        }
+        .def-table tr:last-child td { border-bottom: none; }
+        .def-table tr:hover td { background: var(--glass); }
+        .def-table td:first-child { font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: .82rem; white-space: nowrap; }
+
+        /* ===== COURSE FOOTER ===== */
+        .course-footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
+
+        .btn-dl {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; border-radius: 50px; text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all .3s;
+        }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
+
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: var(--text-soft);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 50px; text-decoration: none;
+            transition: all .3s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-areas: "content";
+            }
+            .toc { display: none; }
+            .breadcrumb { display: none; }
+        }
+        @media (max-width: 600px) {
+            .content-body, .course-header, .course-footer { padding: 1.5rem; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
+
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="btn-back">← Retour</a>
+            <div class="breadcrumb">
+                <a href="../index.html">Formations</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>CYB-044</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="reading-time">⏱ ~15 min de lecture</div>
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <aside class="toc">
+            <div class="toc-title">Table des matières</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#intro" data-section="intro">
+                        <span class="toc-num">00</span>Introduction
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-1" data-section="section-1">
+                        <span class="toc-num">01</span>Définition et Enjeux
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-2" data-section="section-2">
+                        <span class="toc-num">02</span>Structure et Modèles
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-3" data-section="section-3">
+                        <span class="toc-num">03</span>L'Écosystème Technologique
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-4" data-section="section-4">
+                        <span class="toc-num">04</span>Processus de Gestion
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-5" data-section="section-5">
+                        <span class="toc-num">05</span>Framework MITRE ATT&CK
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Playbooks et Incidents
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Mesure de la Performance
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Cas Pratique
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-9" data-section="section-9">
+                        <span class="toc-num">09</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">10</span>Glossaire
+                    </a>
+                </li>
+            </ul>
+
+            <div class="toc-progress">
+                <div class="toc-prog-label">
+                    <span>Progression</span>
+                    <span id="toc-pct">0%</span>
+                </div>
+                <div class="toc-prog-track">
+                    <div class="toc-prog-fill" id="toc-prog-fill"></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+
+            <header class="course-header" id="intro">
+                <div class="header-meta">
+                    <span class="tag-module">CYB-044</span>
+                    <span class="tag-cat">Cybersécurité Opérationnelle</span>
+                    <span class="status-done"><span class="status-dot"></span>Terminé</span>
+                </div>
+                <h1>Initiation à un SOC (Security Operations Center)</h1>
+                <p class="course-intro">
+                    Dans le paysage de la cybersécurité moderne, la question n'est plus de savoir si une organisation sera attaquée, mais quand. Face à cette réalité, les entreprises et les institutions ont dû se doter de capacités de détection et de réponse permanentes, disponibles vingt-quatre heures sur vingt-quatre, sept jours sur sept. C'est précisément la mission du Security Operations Center — le SOC — : une organisation, un ensemble de processus et une suite d'outils qui constituent le centre nerveux de la cyberdéfense opérationnelle.
+                </p>
+                <div class="skill-row">
+                    <span class="skill-tag">SOC</span>
+                    <span class="skill-tag">SIEM</span>
+                    <span class="skill-tag">MITRE ATT&CK</span>
+                    <span class="skill-tag">Réponse à Incident</span>
+                    <span class="skill-tag">Threat Intelligence</span>
+                    <span class="skill-tag">EDR</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <p>Le SOC n'est pas un simple centre de supervision technique. C'est une entité vivante qui combine des compétences humaines pointues, des technologies de détection avancées et des processus éprouvés pour surveiller en continu l'état de sécurité d'un système d'information, détecter les menaces, y répondre efficacement et améliorer en permanence les capacités défensives de l'organisation.</p>
+                
+                <p>Ce cours propose une initiation complète au monde du SOC : sa structure organisationnelle et ses modèles de déploiement, les rôles et responsabilités de chaque acteur, l'écosystème d'outils qui le compose (SIEM, SOAR, EDR, threat intelligence), les processus de gestion des alertes et des incidents, et les indicateurs qui permettent de mesurer son efficacité.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <p>À l'issue de ce module, vous serez capable de comprendre le rôle stratégique d'un SOC, distinguer les niveaux d'analystes (N1, N2, N3), décrire ses outils constitutifs, appliquer un processus structuré de gestion des alertes, utiliser le framework MITRE ATT&CK, et définir les KPIs d'un SOC opérationnel.</p>
+                    </div>
+                </div>
+
+                <div class="section" id="section-1">
+                    <h2 class="section-title">
+                        <span class="section-num">01</span>
+                        Qu'est-ce qu'un SOC ? Définition et Enjeux
+                    </h2>
+
+                    <p>Un Security Operations Center (SOC) est une unité organisationnelle — physique ou virtuelle — dédiée à la surveillance continue, à la détection, à l'analyse et à la réponse aux incidents de cybersécurité au sein d'une organisation. Sa mission première est de réduire le temps entre la survenue d'un incident et sa détection (MTTD), puis entre la détection et la réponse (MTTR), afin de limiter l'impact des cyberattaques sur les activités de l'organisation.</p>
+
+                    <p>Le SOC opère en continu, généralement en mode 24/7/365, car les attaques ne respectent ni les horaires de bureau ni les jours fériés. Cette disponibilité permanente est l'une des caractéristiques fondamentales qui distingue un SOC d'une simple équipe de sécurité IT traditionnelle. Elle implique une organisation en équipes tournantes, une standardisation rigoureuse des processus et des outils capables d'alerter automatiquement les analystes en cas d'événement critique.</p>
+
+                    <p><strong>Le SOC dans l'écosystème de l'organisation :</strong> Le SOC n'est pas une entité isolée. Le RSSI (Responsable de la Sécurité des Systèmes d'Information) fixe la stratégie ; le SOC en est le bras opérationnel. La DSI fournit l'infrastructure ; le SOC remonte les incidents. Il entretient également des relations externes avec des CERT, des fournisseurs de threat intelligence, et des autorités de régulation.</p>
+                </div>
+
+                <div class="section" id="section-2">
+                    <h2 class="section-title">
+                        <span class="section-num">02</span>
+                        Structure et Modèles d'un SOC
+                    </h2>
+
+                    <p>Il n'existe pas un modèle unique de SOC. Les organisations choisissent leur modèle en fonction de leur taille, de leurs contraintes budgétaires, de leur secteur d'activité et de leur niveau de maturité en cybersécurité.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Modèle</th>
+                                <th>Description</th>
+                                <th>Avantages</th>
+                                <th>Inconvénients</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>SOC interne</td><td>Équipe dédiée au sein de l'organisation</td><td>Maîtrise totale, connaissance du SI, réactivité</td><td>Coût élevé, recrutement difficile, couverture 24/7 complexe</td></tr>
+                            <tr><td>SOC externalisé (MSSP)</td><td>Service délégué à un prestataire spécialisé</td><td>Expertise immédiate, disponibilité 24/7, coût mutualisé</td><td>Dépendance au prestataire, moins de connaissance du SI client</td></tr>
+                            <tr><td>SOC hybride</td><td>Combinaison interne (pilotage) + externe (opérations N1/N2)</td><td>Équilibre coût / maîtrise, flexibilité</td><td>Coordination nécessaire, gouvernance plus complexe</td></tr>
+                            <tr><td>Virtual SOC</td><td>Analystes distants sans infrastructure physique dédiée</td><td>Agilité, faible coût d'infrastructure</td><td>Collaboration difficile, dépendance aux outils cloud</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>Organisation par niveaux d'analystes :</strong></p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Niveau</th>
+                                <th>Rôle</th>
+                                <th>Compétences clés</th>
+                                <th>Activités principales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>N1 — Analyste</td><td>Triage des alertes</td><td>Lecture de logs, connaissance des outils SIEM</td><td>Surveillance des tableaux de bord, qualification initiale des alertes, escalade vers N2</td></tr>
+                            <tr><td>N2 — Analyste confirmé</td><td>Investigation</td><td>Forensique, threat hunting, scripting</td><td>Analyse approfondie des incidents, corrélation multi-sources, rédaction des rapports</td></tr>
+                            <tr><td>N3 — Expert</td><td>Réponse avancée & détection proactive</td><td>Reverse engineering, malware analysis, OSINT</td><td>Threat hunting, développement de nouvelles règles de détection, support forensique</td></tr>
+                            <tr><td>SOC Manager</td><td>Pilotage</td><td>Management, reporting, KPIs, conformité</td><td>Gestion de l'équipe, reporting direction, amélioration continue des processus</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p>D'autres rôles existent comme le <strong>SOC Engineer</strong> (maintenance de l'infrastructure technique) et le <strong>Threat Intelligence Analyst</strong> (collecte et analyse de renseignements sur les menaces).</p>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        L'Écosystème Technologique du SOC
+                    </h2>
+
+                    <p>Un SOC moderne s'appuie sur un écosystème d'outils complémentaires et intégrés.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Catégorie</th>
+                                <th>Exemples d'outils</th>
+                                <th>Rôle dans le SOC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>SIEM</td><td>Splunk, Microsoft Sentinel, Elastic SIEM</td><td>Collecte, corrélation et alerte sur les événements de sécurité</td></tr>
+                            <tr><td>SOAR</td><td>Palo Alto XSOAR, Splunk SOAR, TheHive</td><td>Automatisation des réponses et orchestration des workflows</td></tr>
+                            <tr><td>EDR</td><td>CrowdStrike Falcon, SentinelOne</td><td>Détection et réponse sur les endpoints (postes, serveurs)</td></tr>
+                            <tr><td>Threat Intelligence</td><td>MISP, AlienVault OTX, VirusTotal</td><td>Enrichissement des alertes avec des IOC et contexte</td></tr>
+                            <tr><td>Case Management</td><td>TheHive, Jira, ServiceNow</td><td>Suivi du cycle de vie des incidents et traçabilité</td></tr>
+                            <tr><td>Forensique</td><td>Volatility, Autopsy, KAPE</td><td>Analyse post-incident des systèmes compromis</td></tr>
+                            <tr><td>Threat Hunting</td><td>YARA, Sigma, OSQuery</td><td>Recherche proactive de menaces non détectées</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>Le SIEM (Cœur technologique) :</strong> Il collecte et normalise les événements (SIM), puis les corrèle en temps réel pour détecter des patterns et générer des alertes (SEM).</p>
+                    <p><strong>Le SOAR (Automatisation) :</strong> Il s'appuie sur des playbooks pour orchestrer et automatiser la réponse, soulageant ainsi les analystes face aux volumes d'alertes croissants.</p>
+                    <p><strong>L'EDR (Visibilité Endpoint) :</strong> Il fournit des données comportementales au niveau des processus et permet une réponse directe (isolation réseau, kill de processus) face aux attaques fileless et malwares avancés.</p>
+                </div>
+
+                <div class="section" id="section-4">
+                    <h2 class="section-title">
+                        <span class="section-num">04</span>
+                        Processus de Gestion des Alertes
+                    </h2>
+
+                    <p>Toute alerte générée suit un cycle de vie structuré, formalisé pour garantir qu'aucune alerte n'est perdue et que les incidents sont traités selon leur criticité.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Étape</th>
+                                <th>Action</th>
+                                <th>Responsable</th>
+                                <th>Outils / Livrables</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1</td><td>Réception de l'alerte SIEM</td><td>Analyste N1</td><td>Dashboard SIEM</td></tr>
+                            <tr><td>2</td><td>Triage initial (Vrai/Faux positif)</td><td>Analyste N1</td><td>Logs sources, CMDB, threat intel</td></tr>
+                            <tr><td>3</td><td>Escalade si vrai positif</td><td>Analyste N1 → N2</td><td>Ticket d'incident (TheHive, Jira)</td></tr>
+                            <tr><td>4</td><td>Investigation approfondie</td><td>Analyste N2</td><td>Rapport d'analyse, timeline, IOCs</td></tr>
+                            <tr><td>5</td><td>Containment (isolation)</td><td>N2 / N3 + Équipe IT</td><td>Blocage pare-feu, isolation réseau</td></tr>
+                            <tr><td>6</td><td>Éradication et Recovery</td><td>Équipe IT + N2</td><td>Nettoyage système, restauration</td></tr>
+                            <tr><td>7</td><td>Post-mortem et clôture</td><td>N2 + SOC Manager</td><td>Rapport de clôture, REX</td></tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>Le Triage :</strong> L'analyste N1 doit qualifier rapidement (idéalement < 15 min) une alerte pour déterminer s'il s'agit d'un vrai positif nécessitant une escalade. Il s'appuie sur les logs bruts, la CMDB et la Threat Intelligence.</p>
+                    
+                    <p><strong>L'Investigation :</strong> L'analyste N2 reconstruit la chronologie (timeline) pour comprendre le vecteur d'attaque initial et les mouvements latéraux, en s'appuyant sur le framework MITRE ATT&CK.</p>
+
+                    <div class="callout callout-warn">
+                        <span class="callout-icon">⚠️</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Containment et Réponse</div>
+                            <p>Le containment vise à empêcher la propagation sans alerter l'adversaire (isolation réseau, blocage IP). Cette décision doit se prendre en concertation avec les équipes IT pour équilibrer sécurité et continuité d'activité de l'entreprise.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-5">
+                    <h2 class="section-title">
+                        <span class="section-num">05</span>
+                        Le Framework MITRE ATT&CK
+                    </h2>
+
+                    <p>MITRE ATT&CK est une matrice de référence mondiale décrivant les comportements des attaquants informatiques. Les colonnes représentent les <strong>tactiques</strong> (l'objectif de l'attaquant : Accès initial, Exécution, Exfiltration...) et les cellules représentent les <strong>techniques</strong> (la méthode : Spearphishing, Valid Accounts...).</p>
+
+                    <p>Dans le SOC, ATT&CK est utilisé pour :</p>
+                    <ul>
+                        <li><strong>La Détection :</strong> Mapper les règles du SIEM sur la matrice pour identifier les angles morts (heat map ATT&CK).</li>
+                        <li><strong>L'Investigation :</strong> Comprendre le contexte d'une attaque et anticiper les prochains mouvements.</li>
+                        <li><strong>Le Reporting :</strong> Fournir un vocabulaire standardisé.</li>
+                    </ul>
+
+                    <p>ATT&CK documente également les groupes d'attaquants (ex: APT28, Lazarus Group), ce qui permet une approche de défense informée par la menace (threat-informed defense).</p>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Playbooks et Gestion des Incidents
+                    </h2>
+
+                    <p>Un <strong>playbook</strong> est une procédure documentée et standardisée décrivant comment répondre à un type d'incident spécifique (ex: ransomware, phishing). Il garantit la cohérence des réponses entre les différents analystes.</p>
+
+                    <p>Structure d'un playbook efficace :</p>
+                    <ul>
+                        <li><strong>Déclenchement :</strong> Conditions exactes d'application.</li>
+                        <li><strong>Investigation :</strong> Étapes pour qualifier et collecter l'information.</li>
+                        <li><strong>Containment :</strong> Actions pour limiter l'impact (avec niveaux d'autorisation).</li>
+                        <li><strong>Communication :</strong> Qui notifier, quand, et comment.</li>
+                        <li><strong>Clôture :</strong> Livrables (rapport d'incident, REX).</li>
+                    </ul>
+
+                    <p><strong>Le Rapport d'Incident :</strong> C'est le document de référence. Il comporte une synthèse exécutive, une chronologie détaillée, la description technique (mapping ATT&CK), les systèmes affectés, les actions réalisées, et les recommandations futures.</p>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Mesure de la Performance du SOC
+                    </h2>
+
+                    <p>Mesurer la performance permet de détecter les dérives opérationnelles et de justifier les investissements auprès de la direction. Les KPIs doivent être SMART.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>KPI</th>
+                                <th>Définition</th>
+                                <th>Objectif cible</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>MTTD (Mean Time to Detect)</td><td>Délai entre le début d'un incident et sa détection</td><td>< 1 heure (incidents critiques)</td></tr>
+                            <tr><td>MTTA (Mean Time to Acknowledge)</td><td>Délai entre la génération d'une alerte et sa prise en charge</td><td>< 15 minutes</td></tr>
+                            <tr><td>MTTR (Mean Time to Respond)</td><td>Délai entre la détection et les mesures de containment</td><td>< 4 heures (critiques)</td></tr>
+                            <tr><td>Taux de faux positifs</td><td>Proportion d'alertes sans incident réel</td><td>< 10 %</td></tr>
+                            <tr><td>Couverture MITRE ATT&CK</td><td>% des techniques couvertes par les règles de détection</td><td>> 60 % (objectif progressif)</td></tr>
+                            <tr><td>Taux de réouverture</td><td>Incidents clôturés nécessitant une réouverture</td><td>< 5 %</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-tip">
+                        <span class="callout-icon">✅</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Tableau de bord et Reporting</div>
+                            <p>Le SOC produit un dashboard opérationnel temps réel pour l'équipe (alertes en cours, KPIs de la semaine) et un rapport mensuel exécutif pour le RSSI et la direction (risques, incidents traités, ROI).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Cas Pratique : Mise en Situation SOC
+                    </h2>
+
+                    <p><strong>Le Scénario :</strong> Le mardi 14 novembre à 02h17, l'analyste N1 reçoit une alerte de criticité haute : "Authentification réussie après échecs — Compte à privilèges — Hors horaires". Détails : 15 échecs RDP sur <code>svc_backup</code>, suivis d'un succès depuis l'IP 45.33.32.156 sur le serveur critique SRV-BACKUP-01.</p>
+                    
+                    <p><strong>Triage N1 :</strong> L'IP correspond à un fournisseur de VPN (Mullvad). Le compte <code>svc_backup</code> est normalement automatisé. La séquence est un brute force avéré. L'analyste escalade immédiatement au N2 (ticket critique ouvert à 02h21).</p>
+                    
+                    <p><strong>Investigation N2 :</strong> L'IP a tenté de se connecter à 3 autres serveurs. L'attaquant a exécuté des commandes PowerShell (<code>net user</code>, <code>whoami /all</code>) de découverte post-exploitation (T1087, T1069). Le risque sur les sauvegardes est élevé.</p>
+                    
+                    <p><strong>Containment et Post-Mortem :</strong> Le compte est désactivé, le serveur est isolé réseau via l'EDR, et l'IP bloquée au pare-feu. À 03h15, le périmètre est contenu. Le lendemain, la cause racine est identifiée : le mot de passe du compte de service n'avait pas été modifié depuis 3 ans et n'était pas complexe. Des mesures de rotation immédiates sont appliquées.</p>
+                </div>
+
+                <div class="section" id="section-9">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Trois grandes leçons synthétisent ce module :</p>
+                    <ol>
+                        <li><strong>Le SOC est avant tout une organisation humaine :</strong> Les outils (SIEM, EDR) ne sont que des amplificateurs. Une équipe compétente avec des processus formalisés sera toujours plus efficace qu'un empilement de technologies mal gérées. Le recrutement et la prévention du burn-out sont primordiaux.</li>
+                        <li><strong>La standardisation est le socle de l'efficacité :</strong> Les playbooks et procédures de triage garantissent une réponse cohérente, quel que soit le moment ou l'analyste de garde.</li>
+                        <li><strong>Le SOC est un investissement stratégique :</strong> Son efficacité se mesure aux incidents contenus avant de devenir des désastres. Le coût d'un incident majeur (rançon, RGPD, réputation) justifie largement l'investissement dans des capacités de détection 24/7.</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">10</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>ATT&CK (MITRE)</td><td>Matrice de référence des tactiques, techniques et procédures (TTP) utilisées par les attaquants.</td></tr>
+                            <tr><td>Containment</td><td>Phase de réponse visant à limiter la propagation de la menace sans nécessairement l'éliminer immédiatement.</td></tr>
+                            <tr><td>EDR</td><td>Endpoint Detection and Response — solution de sécurité sur les postes et serveurs.</td></tr>
+                            <tr><td>Escalade</td><td>Transmission d'une alerte d'un niveau d'analyste à un niveau supérieur.</td></tr>
+                            <tr><td>Faux positif</td><td>Alerte générée par le SIEM ne correspondant pas à un incident de sécurité réel.</td></tr>
+                            <tr><td>IOC</td><td>Indicator of Compromise — observable technique (hash, IP, domaine) identifiant une compromission.</td></tr>
+                            <tr><td>MSSP</td><td>Managed Security Service Provider — prestataire opérant un SOC externalisé.</td></tr>
+                            <tr><td>Playbook</td><td>Procédure documentée décrivant les étapes de réponse à un type d'incident spécifique.</td></tr>
+                            <tr><td>Post-mortem</td><td>Analyse après incident pour identifier les causes racines et les améliorations.</td></tr>
+                            <tr><td>SIEM</td><td>Security Information and Event Management — plateforme centrale du SOC.</td></tr>
+                            <tr><td>SOAR</td><td>Security Orchestration, Automation and Response — automatisation des workflows de réponse.</td></tr>
+                            <tr><td>Threat Hunting</td><td>Recherche proactive de menaces non détectées par les outils automatisés.</td></tr>
+                            <tr><td>Triage</td><td>Phase initiale consistant à qualifier rapidement la nature (vrai/faux positif) et la criticité d'une alerte.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <footer class="course-footer">
+                <div class="footer-info">
+                    <p>Module suivant</p>
+                    <strong>CYB-045 — Gestion des incidents et réponse →</strong>
+                </div>
+                <div class="footer-actions">
+                    <a href="CYB-043.html" class="btn-nav">
+                        ← Module précédent
+                    </a>
+                    <a href="pdf/CYB-044.pdf" download="CYB-044.pdf" class="btn-dl">
+                        ⬇ Télécharger le PDF contenant le cours complet
+                    </a>
+                    <a href="CYB-045.html" class="btn-nav">
+                        Module suivant →
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        </div>
+    <script>
+        /* ===== SCROLL PROGRESS ===== */
+        const bar = document.getElementById('progress-bar');
+        const tocFill = document.getElementById('toc-prog-fill');
+        const tocPct = document.getElementById('toc-pct');
+
+        function updateScroll() {
+            const scrolled = window.scrollY;
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? scrolled / total * 100 : 0;
+            bar.style.width = pct + '%';
+            tocFill.style.width = pct + '%';
+            tocPct.textContent = Math.round(pct) + '%';
+        }
+
+        /* ===== ACTIVE TOC LINK ===== */
+        const sections = document.querySelectorAll('[id]');
+        const tocLinks = document.querySelectorAll('.toc-item a');
+
+        function updateTOC() {
+            let current = '';
+            sections.forEach(sec => {
+                const top = sec.getBoundingClientRect().top;
+                if (top <= 100) current = sec.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === current);
+            });
+        }
+
+        window.addEventListener('scroll', () => { updateScroll(); updateTOC(); }, { passive: true });
+        updateScroll(); updateTOC();
+
+        /* ===== THEME ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== COPY CODE ===== */
+        function copyCode(btn) {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copié ✓';
+                btn.style.color = '#4ade80';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+            });
+        }
+    </script>
+
+</body>
+</html>

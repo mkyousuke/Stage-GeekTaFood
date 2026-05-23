@@ -1,141 +1,753 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYB-042 - Déploiement et Gestion des Pare-feu</title>
+    <title>CYB-042 — Déploiement et gestion des pare-feu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* Variables identiques au fichier principal */
+        /* ===== THEME ===== */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-blur: blur(20px);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #0ea5e9;
-            --bg-color: #020617;
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.3);
+            --radius: 16px;
+            --transition: .4s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.75);
+            --nav-bg: rgba(3,7,18,.8);
+            --callout-info: rgba(56,189,248,.08);
+            --callout-warn: rgba(251,191,36,.08);
+            --callout-tip: rgba(74,222,128,.08);
+            --callout-info-border: rgba(56,189,248,.3);
+            --callout-warn-border: rgba(251,191,36,.3);
+            --callout-tip-border: rgba(74,222,128,.3);
+        }
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e4eefb;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.75);
+            --glass-border: rgba(100,140,210,.18);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,.85);
+            --nav-bg: rgba(240,246,255,.88);
+            --callout-info: rgba(14,165,233,.07);
+            --callout-warn: rgba(217,119,6,.07);
+            --callout-tip: rgba(22,163,74,.07);
+            --callout-info-border: rgba(14,165,233,.3);
+            --callout-warn-border: rgba(217,119,6,.3);
+            --callout-tip-border: rgba(22,163,74,.3);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
+        /* ===== RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
         }
 
-        /* Arrière-plan animé */
+        /* ===== SCROLL PROGRESS ===== */
+        #progress-bar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6);
+            z-index: 9999; transition: width .1s linear;
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ===== BACKGROUND ===== */
         .bg-shape {
-            position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1;
-            animation: float 15s infinite alternate ease-in-out; opacity: 0.5;
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
         }
-        .shape1 { width: 600px; height: 600px; background: #2563eb; top: -200px; left: -150px; }
-        .shape2 { width: 700px; height: 700px; background: #7c3aed; bottom: -250px; right: -200px; animation-delay: -7s; }
-        .shape3 { width: 500px; height: 500px; background: #0ea5e9; top: 30%; left: 40%; animation-duration: 20s; }
-        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(80px, 100px) scale(1.1); } }
-
-        /* Conteneur principal */
-        .course-container {
-            max-width: 900px;
-            margin: 4rem auto;
-            padding: 3rem;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        [data-theme="dark"] .bg-shape { opacity: .3; }
+        [data-theme="light"] .bg-shape { opacity: .12; }
+        .s1 { width:550px;height:550px;background:#1d4ed8;top:-150px;left:-120px; }
+        .s2 { width:600px;height:600px;background:#6d28d9;bottom:-200px;right:-150px;animation-delay:-8s; }
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(60px,80px) scale(1.1); }
         }
 
-        /* Typographie du cours */
-        .tag {
-            background: rgba(14, 165, 233, 0.15);
-            color: #38bdf8;
-            padding: 0.4rem 1rem;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            border: 1px solid rgba(14, 165, 233, 0.3);
-            display: inline-block;
-            margin-bottom: 1.5rem;
+        /* ===== TOP NAV ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            height: 64px; padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500; transition: background var(--transition);
         }
 
-        h1 { font-size: 2.5rem; color: #38bdf8; margin-bottom: 1.5rem; }
-        h2 { font-size: 1.5rem; color: #fff; margin-top: 2rem; margin-bottom: 1rem; }
-        p { font-size: 1.1rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 1.5rem; }
-        ul { margin-left: 2rem; margin-bottom: 1.5rem; color: var(--text-muted); line-height: 1.8; font-size: 1.1rem; }
-        strong { color: #e2e8f0; }
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
 
-        /* Boutons */
         .btn-back {
-            display: inline-flex; align-items: center; gap: 0.5rem;
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .4rem .9rem; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-soft);
+            text-decoration: none; font-weight: 600; font-size: .85rem;
+            transition: all .25s; cursor: pointer;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .breadcrumb a:hover { color: var(--accent); }
+        .breadcrumb-sep { opacity: .4; }
+
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .reading-time {
+            font-size: .8rem; color: var(--text-muted);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: .3rem .8rem; border-radius: 8px;
+            display: flex; align-items: center; gap: .3rem;
+        }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-areas: "toc content";
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 84px 2rem 5rem;
+            position: relative; z-index: 1;
+            align-items: start;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            grid-area: toc;
+            position: sticky; top: 80px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .toc::-webkit-scrollbar { width: 4px; }
+        .toc::-webkit-scrollbar-track { background: transparent; }
+        .toc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .toc-title {
+            font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: .9rem; padding-bottom: .7rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toc-list { list-style: none; display: flex; flex-direction: column; gap: .15rem; }
+
+        .toc-item a {
+            display: flex; align-items: flex-start; gap: .5rem;
+            padding: .4rem .6rem; border-radius: 8px;
             color: var(--text-muted); text-decoration: none;
+            font-size: .83rem; font-weight: 500; line-height: 1.4;
+            transition: all .2s;
+            border-left: 2px solid transparent;
+        }
+        .toc-item a:hover { color: var(--text); background: var(--glass); }
+        .toc-item a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.07); }
+        .toc-num { font-size: .72rem; color: var(--accent); font-weight: 700; flex-shrink: 0; padding-top: .1rem; }
+
+        /* Progress in TOC */
+        .toc-progress {
+            margin-top: 1.2rem; padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .toc-prog-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+        }
+        .toc-prog-label span:last-child { color: var(--accent); font-weight: 600; }
+        .toc-prog-track {
+            height: 4px; background: var(--bg3); border-radius: 50px; overflow: hidden;
+        }
+        .toc-prog-fill {
+            height: 100%; border-radius: 50px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            width: 0%; transition: width .3s ease;
+        }
+
+        /* ===== COURSE CONTENT ===== */
+        .content {
+            grid-area: content;
+            min-width: 0;
+        }
+
+        /* Course header */
+        .course-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: .8rem;
+            flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+
+        .tag-module {
+            background: rgba(56,189,248,.12);
+            color: #38bdf8; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 700; letter-spacing: .5px;
+            border: 1px solid rgba(56,189,248,.25);
+        }
+        .tag-cat {
+            background: rgba(129,140,248,.1);
+            color: #a78bfa; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 600;
+            border: 1px solid rgba(129,140,248,.2);
+        }
+        .status-done {
+            display: flex; align-items: center; gap: .35rem;
+            background: rgba(74,222,128,.1); color: #4ade80;
+            border: 1px solid rgba(74,222,128,.2);
+            padding: .3rem .8rem; border-radius: 30px;
+            font-size: .78rem; font-weight: 600;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .course-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 800; line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f1f5f9 40%, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .course-header h1 {
+            background: linear-gradient(135deg, #0f172a 40%, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .course-intro {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-soft); margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+        }
+        .skill-tag {
+            font-size: .75rem; font-weight: 600;
+            padding: .25rem .7rem; border-radius: 7px;
+            background: var(--bg3);
+            color: var(--text-soft);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ===== CONTENT BODY ===== */
+        .content-body {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sections */
+        .section { margin-bottom: 3rem; }
+        .section:last-of-type { margin-bottom: 0; }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem; font-weight: 700;
+            color: var(--text); margin-bottom: 1.1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .section-num {
+            font-size: .8rem; font-weight: 700;
+            color: var(--accent); background: rgba(56,189,248,.1);
+            border: 1px solid rgba(56,189,248,.2);
+            padding: .2rem .55rem; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content-body p {
+            font-size: 1rem; line-height: 1.8;
+            color: var(--text-soft); margin-bottom: 1.1rem;
+        }
+
+        /* Lists */
+        .content-body ul, .content-body ol {
+            margin: .5rem 0 1.2rem 1.2rem;
+            color: var(--text-soft);
+        }
+        .content-body li {
+            font-size: 1rem; line-height: 1.75;
+            margin-bottom: .4rem; padding-left: .3rem;
+        }
+        .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            margin: 1.4rem 0; display: flex; gap: .9rem; align-items: flex-start;
+        }
+        .callout-info {
+            background: var(--callout-info);
+            border: 1px solid var(--callout-info-border);
+            border-left: 3px solid #38bdf8;
+        }
+        .callout-warn {
+            background: var(--callout-warn);
+            border: 1px solid var(--callout-warn-border);
+            border-left: 3px solid #fbbf24;
+        }
+        .callout-tip {
+            background: var(--callout-tip);
+            border: 1px solid var(--callout-tip-border);
+            border-left: 3px solid #4ade80;
+        }
+        .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+        .callout-body { flex: 1; }
+        .callout-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; margin-bottom: .3rem;
+        }
+        .callout-info .callout-label { color: #38bdf8; }
+        .callout-warn .callout-label { color: #fbbf24; }
+        .callout-tip .callout-label { color: #4ade80; }
+        .callout-body p {
+            font-size: .92rem; margin-bottom: 0; color: var(--text-soft);
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; font-weight: 500;
+            background: var(--bg3); color: var(--accent);
+            padding: .15rem .45rem; border-radius: 5px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--bg2); border: 1px solid var(--glass-border);
+            border-radius: 12px; overflow: hidden; margin: 1.2rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .6rem 1rem; border-bottom: 1px solid var(--glass-border);
+            background: var(--bg3);
+        }
+        .code-lang {
+            font-size: .72rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .copy-btn {
+            font-size: .72rem; font-weight: 600; color: var(--text-muted);
             background: transparent; border: 1px solid var(--glass-border);
-            padding: 0.6rem 1.2rem; border-radius: 8px;
-            transition: all 0.3s; margin-bottom: 2rem; font-weight: 600;
+            padding: .2rem .6rem; border-radius: 5px; cursor: pointer;
+            transition: all .2s;
         }
-        .btn-back:hover { color: #fff; background: var(--glass-bg); border-color: var(--accent); }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .code-block pre {
+            padding: 1.1rem 1.2rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; line-height: 1.65;
+            color: var(--text-soft);
+            margin: 0;
+        }
 
-        .btn-full-course {
-            display: block; width: fit-content; margin: 3rem auto 1rem auto;
-            padding: 1rem 2.5rem; font-size: 1.1rem; font-weight: 600; color: #fff;
-            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        /* Definition table */
+        .def-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .def-table th {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-muted);
+            padding: .7rem 1rem; text-align: left;
+            background: var(--bg3); border-bottom: 1px solid var(--glass-border);
+        }
+        .def-table th:first-child { border-radius: 8px 0 0 0; }
+        .def-table th:last-child { border-radius: 0 8px 0 0; }
+        .def-table td {
+            padding: .75rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-soft); vertical-align: top;
+        }
+        .def-table tr:last-child td { border-bottom: none; }
+        .def-table tr:hover td { background: var(--glass); }
+        .def-table td:first-child { font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: .82rem; white-space: nowrap; }
+
+        /* ===== COURSE FOOTER ===== */
+        .course-footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
+
+        .btn-dl {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
             border: none; border-radius: 50px; text-decoration: none;
-            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(14, 165, 233, 0.5);
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all .3s;
         }
-        .btn-full-course:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6); }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .course-container { padding: 2rem; margin: 2rem 1rem; }
-            h1 { font-size: 2rem; }
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: var(--text-soft);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 50px; text-decoration: none;
+            transition: all .3s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-areas: "content";
+            }
+            .toc { display: none; }
+            .breadcrumb { display: none; }
+        }
+        @media (max-width: 600px) {
+            .content-body, .course-header, .course-footer { padding: 1.5rem; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-shape shape1"></div>
-    <div class="bg-shape shape2"></div>
-    <div class="bg-shape shape3"></div>
+    <div id="progress-bar"></div>
 
-    <div class="course-container">
-        <a href="../index.html" class="btn-back">← Retour aux formations</a>
-        
-        <span class="tag">CYB-042</span>
-        <h1>Déploiement et Gestion des Pare-feu</h1>
-        
-        <p>Dans un monde où les cybermenaces évoluent à une vitesse sans précédent, la maîtrise des pare-feu est devenue une compétence fondamentale pour tout professionnel de la cybersécurité. Le pare-feu est bien plus qu'un simple filtre de paquets : c'est le point de contrôle stratégique entre la confiance et l'incertitude, entre le réseau interne d'une organisation et l'Internet hostile.</p>
-        
-        <h2>1. Fondements et Rôle Stratégique</h2>
-        <p>Un pare-feu (firewall) est un système (logiciel ou matériel) dont la mission est de contrôler les flux réseau entrants et sortants en appliquant un ensemble de règles définies par l'administrateur. Il est important de comprendre que le pare-feu n'est jamais une solution unique, il s'inscrit dans une stratégie de défense en profondeur (Defense in Depth) qui superpose plusieurs couches de protection.</p>
-        
-        <h2>2. Architecture Réseau : Les Zones de Sécurité</h2>
-        <p>La segmentation d'un réseau en zones de confiance distinctes est le premier acte de tout architecte sécurité. Le pare-feu est l'arbitre entre ces zones :</p>
-        <ul>
-            <li><strong>La Zone LAN :</strong> Le réseau interne regroupant les postes de travail et serveurs. C'est la zone de confiance maximale.</li>
-            <li><strong>La Zone WAN :</strong> Représente l'Internet et les réseaux tiers. C'est la zone de confiance zéro (Zero Trust) qui doit être traitée avec une méfiance maximale.</li>
-            <li><strong>La Zone DMZ :</strong> La zone intermédiaire destinée à héberger les services accessibles depuis Internet (serveurs Web, messagerie...). Si un serveur DMZ est compromis, l'attaquant ne doit pas pouvoir atteindre le LAN directement.</li>
-        </ul>
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
 
-        <h2>3. Objectifs Pédagogiques</h2>
-        <p>Dans ce module complet, nous allons explorer en profondeur les mécanismes des solutions leaders du marché : pfSense, Fortinet FortiGate et Cisco ASA. Vous apprendrez notamment à :</p>
-        <ul>
-            <li>Différencier les types de pare-feu (stateless, stateful, applicatif, NGFW).</li>
-            <li>Installer et configurer ces équipements en rédigeant des règles de filtrage précises.</li>
-            <li>Mettre en œuvre des VPN IPsec et SSL/TLS pour les accès distants.</li>
-            <li>Activer la supervision et centraliser les journaux d'événements (Syslog, SIEM) pour répondre aux incidents.</li>
-        </ul>
-        
-        <a href="pdf/CYB-042.pdf" 
-           download="CYB-042.pdf" 
-           target="_blank" 
-           class="btn-full-course" 
-           onclick="return confirm('Voulez-vous télécharger le PDF contenant le cours complet ?');">
-           Découvrir la formation complète
-        </a>
-    </div>
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="btn-back">← Retour</a>
+            <div class="breadcrumb">
+                <a href="../index.html">Formations</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>CYB-042</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="reading-time">⏱ ~5 min de lecture</div>
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <aside class="toc">
+            <div class="toc-title">Table des matières</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#intro" data-section="intro">
+                        <span class="toc-num">00</span>Introduction
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-1" data-section="section-1">
+                        <span class="toc-num">01</span>Fondements et Rôle
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-2" data-section="section-2">
+                        <span class="toc-num">02</span>Les Zones de Sécurité
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-3" data-section="section-3">
+                        <span class="toc-num">03</span>Objectifs Pédagogiques
+                    </a>
+                </li>
+            </ul>
+
+            <div class="toc-progress">
+                <div class="toc-prog-label">
+                    <span>Progression</span>
+                    <span id="toc-pct">0%</span>
+                </div>
+                <div class="toc-prog-track">
+                    <div class="toc-prog-fill" id="toc-prog-fill"></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+
+            <header class="course-header" id="intro">
+                <div class="header-meta">
+                    <span class="tag-module">CYB-042</span>
+                    <span class="tag-cat">Sécurité Réseau</span>
+                    <span class="status-done"><span class="status-dot"></span>Terminé</span>
+                </div>
+                <h1>Déploiement et Gestion des Pare-feu</h1>
+                <p class="course-intro">
+                    Dans un monde où les cybermenaces évoluent à une vitesse sans précédent, la maîtrise des pare-feu est devenue une compétence fondamentale pour tout professionnel de la cybersécurité. Le pare-feu est bien plus qu'un simple filtre de paquets : c'est le point de contrôle stratégique entre la confiance et l'incertitude, entre le réseau interne d'une organisation et l'Internet hostile.
+                </p>
+                <div class="skill-row">
+                    <span class="skill-tag">pfSense</span>
+                    <span class="skill-tag">Fortinet</span>
+                    <span class="skill-tag">Cisco ASA</span>
+                    <span class="skill-tag">DMZ</span>
+                    <span class="skill-tag">Zero Trust</span>
+                    <span class="skill-tag">VPN</span>
+                    <span class="skill-tag">Filtrage de paquets</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <div class="section" id="section-1">
+                    <h2 class="section-title">
+                        <span class="section-num">01</span>
+                        Fondements et Rôle Stratégique
+                    </h2>
+
+                    <p>Un pare-feu (firewall) est un système (logiciel ou matériel) dont la mission est de contrôler les flux réseau entrants et sortants en appliquant un ensemble de règles définies par l'administrateur.</p>
+
+                    <div class="callout callout-info">
+                        <span class="callout-icon">💡</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Défense en profondeur</div>
+                            <p>Il est important de comprendre que le pare-feu n'est jamais une solution unique, il s'inscrit dans une stratégie de défense en profondeur (<em>Defense in Depth</em>) qui superpose plusieurs couches de protection pour sécuriser l'infrastructure globale.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-2">
+                    <h2 class="section-title">
+                        <span class="section-num">02</span>
+                        Architecture Réseau : Les Zones de Sécurité
+                    </h2>
+
+                    <p>La segmentation d'un réseau en zones de confiance distinctes est le premier acte de tout architecte sécurité. Le pare-feu intervient comme l'arbitre principal entre ces différentes zones :</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Zone</th>
+                                <th>Description</th>
+                                <th>Niveau de confiance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>LAN (Local Area Network)</td>
+                                <td>Le réseau interne regroupant les postes de travail et serveurs critiques.</td>
+                                <td>Maximale</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ (Demilitarized Zone)</td>
+                                <td>La zone intermédiaire destinée à héberger les services accessibles depuis Internet (serveurs Web, messagerie...).</td>
+                                <td>Intermédiaire</td>
+                            </tr>
+                            <tr>
+                                <td>WAN (Wide Area Network)</td>
+                                <td>Représente l'Internet et les réseaux tiers externes à l'organisation.</td>
+                                <td>Zéro (Zero Trust)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-warn">
+                        <span class="callout-icon">⚠️</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Sécurité de la DMZ</div>
+                            <p>La règle d'or de la segmentation : si un serveur DMZ est compromis, l'attaquant ne doit <strong>jamais</strong> pouvoir atteindre le LAN directement. Des règles de flux strictes (unidirectionnelles) doivent être imposées.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        Objectifs Pédagogiques
+                    </h2>
+
+                    <p>Dans ce module complet, nous allons explorer en profondeur les mécanismes des solutions leaders du marché : <strong>pfSense</strong>, <strong>Fortinet FortiGate</strong> et <strong>Cisco ASA</strong>. À l'issue de ce module, vous saurez :</p>
+
+                    <ul>
+                        <li>Différencier les types de pare-feu (stateless, stateful, applicatif, NGFW).</li>
+                        <li>Installer et configurer ces équipements en rédigeant des règles de filtrage précises et optimisées.</li>
+                        <li>Mettre en œuvre des tunnels VPN IPsec et SSL/TLS pour sécuriser les accès distants.</li>
+                        <li>Activer la supervision et centraliser les journaux d'événements (Syslog, SIEM) pour faciliter la réponse aux incidents.</li>
+                    </ul>
+
+                    <div class="callout callout-tip">
+                        <span class="callout-icon">✅</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Bonne pratique : Politique de blocage par défaut</div>
+                            <p>En configuration de pare-feu, la norme est d'adopter une approche de liste blanche (Default Deny). On interdit tout le trafic, puis on n'autorise que ce qui est strictement nécessaire au fonctionnement métier.</p>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-lang">bash — Exemple de logique Default Deny (Iptables)</span>
+                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                        </div>
+                        <pre># 1. Bloquer tout le trafic par défaut (Drop policy)
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+
+# 2. Autoriser le trafic sur la boucle locale (localhost)
+iptables -A INPUT -i lo -j ACCEPT
+
+# 3. Autoriser les paquets relatifs aux connexions déjà établies (Stateful)
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT</pre>
+                    </div>
+
+                </div>
+
+            </div>
+            <footer class="course-footer">
+                <div class="footer-info">
+                    <p>Module suivant</p>
+                    <strong>CYB-043 — Gestion des logs et centralisation →</strong>
+                </div>
+                <div class="footer-actions">
+                    <a href="CYB-041.html" class="btn-nav">
+                        ← Module précédent
+                    </a>
+                    <a href="pdf/CYB-042.pdf" download="CYB-042.pdf" class="btn-dl">
+                        ⬇ Télécharger le PDF contenant le cours complet
+                    </a>
+                    <a href="CYB-043.html" class="btn-nav">
+                        Module suivant →
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        </div>
+    <script>
+        /* ===== SCROLL PROGRESS ===== */
+        const bar = document.getElementById('progress-bar');
+        const tocFill = document.getElementById('toc-prog-fill');
+        const tocPct = document.getElementById('toc-pct');
+
+        function updateScroll() {
+            const scrolled = window.scrollY;
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? scrolled / total * 100 : 0;
+            bar.style.width = pct + '%';
+            tocFill.style.width = pct + '%';
+            tocPct.textContent = Math.round(pct) + '%';
+        }
+
+        /* ===== ACTIVE TOC LINK ===== */
+        const sections = document.querySelectorAll('[id]');
+        const tocLinks = document.querySelectorAll('.toc-item a');
+
+        function updateTOC() {
+            let current = '';
+            sections.forEach(sec => {
+                const top = sec.getBoundingClientRect().top;
+                if (top <= 100) current = sec.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === current);
+            });
+        }
+
+        window.addEventListener('scroll', () => { updateScroll(); updateTOC(); }, { passive: true });
+        updateScroll(); updateTOC();
+
+        /* ===== THEME ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== COPY CODE ===== */
+        function copyCode(btn) {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copié ✓';
+                btn.style.color = '#4ade80';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+            });
+        }
+    </script>
 
 </body>
 </html>
