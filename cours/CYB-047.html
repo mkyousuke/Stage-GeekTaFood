@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB-047 — Veille et intelligence cyber</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME ===== */
+        :root {
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.3);
+            --radius: 16px;
+            --transition: .4s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.75);
+            --nav-bg: rgba(3,7,18,.8);
+            --callout-info: rgba(56,189,248,.08);
+            --callout-warn: rgba(251,191,36,.08);
+            --callout-tip: rgba(74,222,128,.08);
+            --callout-info-border: rgba(56,189,248,.3);
+            --callout-warn-border: rgba(251,191,36,.3);
+            --callout-tip-border: rgba(74,222,128,.3);
+        }
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e4eefb;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.75);
+            --glass-border: rgba(100,140,210,.18);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,.85);
+            --nav-bg: rgba(240,246,255,.88);
+            --callout-info: rgba(14,165,233,.07);
+            --callout-warn: rgba(217,119,6,.07);
+            --callout-tip: rgba(22,163,74,.07);
+            --callout-info-border: rgba(14,165,233,.3);
+            --callout-warn-border: rgba(217,119,6,.3);
+            --callout-tip-border: rgba(22,163,74,.3);
+        }
+
+        /* ===== RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ===== SCROLL PROGRESS ===== */
+        #progress-bar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6);
+            z-index: 9999; transition: width .1s linear;
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ===== BACKGROUND ===== */
+        .bg-shape {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        [data-theme="dark"] .bg-shape { opacity: .3; }
+        [data-theme="light"] .bg-shape { opacity: .12; }
+        .s1 { width:550px;height:550px;background:#1d4ed8;top:-150px;left:-120px; }
+        .s2 { width:600px;height:600px;background:#6d28d9;bottom:-200px;right:-150px;animation-delay:-8s; }
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(60px,80px) scale(1.1); }
+        }
+
+        /* ===== TOP NAV ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            height: 64px; padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500; transition: background var(--transition);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .4rem .9rem; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-soft);
+            text-decoration: none; font-weight: 600; font-size: .85rem;
+            transition: all .25s; cursor: pointer;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .breadcrumb a:hover { color: var(--accent); }
+        .breadcrumb-sep { opacity: .4; }
+
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .reading-time {
+            font-size: .8rem; color: var(--text-muted);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: .3rem .8rem; border-radius: 8px;
+            display: flex; align-items: center; gap: .3rem;
+        }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-areas: "toc content";
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 84px 2rem 5rem;
+            position: relative; z-index: 1;
+            align-items: start;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            grid-area: toc;
+            position: sticky; top: 80px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .toc::-webkit-scrollbar { width: 4px; }
+        .toc::-webkit-scrollbar-track { background: transparent; }
+        .toc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .toc-title {
+            font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: .9rem; padding-bottom: .7rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toc-list { list-style: none; display: flex; flex-direction: column; gap: .15rem; }
+
+        .toc-item a {
+            display: flex; align-items: flex-start; gap: .5rem;
+            padding: .4rem .6rem; border-radius: 8px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: .83rem; font-weight: 500; line-height: 1.4;
+            transition: all .2s;
+            border-left: 2px solid transparent;
+        }
+        .toc-item a:hover { color: var(--text); background: var(--glass); }
+        .toc-item a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.07); }
+        .toc-num { font-size: .72rem; color: var(--accent); font-weight: 700; flex-shrink: 0; padding-top: .1rem; }
+
+        /* Progress in TOC */
+        .toc-progress {
+            margin-top: 1.2rem; padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .toc-prog-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+        }
+        .toc-prog-label span:last-child { color: var(--accent); font-weight: 600; }
+        .toc-prog-track {
+            height: 4px; background: var(--bg3); border-radius: 50px; overflow: hidden;
+        }
+        .toc-prog-fill {
+            height: 100%; border-radius: 50px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            width: 0%; transition: width .3s ease;
+        }
+
+        /* ===== COURSE CONTENT ===== */
+        .content {
+            grid-area: content;
+            min-width: 0;
+        }
+
+        /* Course header */
+        .course-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: .8rem;
+            flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+
+        .tag-module {
+            background: rgba(56,189,248,.12);
+            color: #38bdf8; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 700; letter-spacing: .5px;
+            border: 1px solid rgba(56,189,248,.25);
+        }
+        .tag-cat {
+            background: rgba(129,140,248,.1);
+            color: #a78bfa; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 600;
+            border: 1px solid rgba(129,140,248,.2);
+        }
+        .status-done {
+            display: flex; align-items: center; gap: .35rem;
+            background: rgba(74,222,128,.1); color: #4ade80;
+            border: 1px solid rgba(74,222,128,.2);
+            padding: .3rem .8rem; border-radius: 30px;
+            font-size: .78rem; font-weight: 600;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .course-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 800; line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f1f5f9 40%, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .course-header h1 {
+            background: linear-gradient(135deg, #0f172a 40%, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .course-intro {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-soft); margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+        }
+        .skill-tag {
+            font-size: .75rem; font-weight: 600;
+            padding: .25rem .7rem; border-radius: 7px;
+            background: var(--bg3);
+            color: var(--text-soft);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ===== CONTENT BODY ===== */
+        .content-body {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sections */
+        .section { margin-bottom: 3rem; }
+        .section:last-of-type { margin-bottom: 0; }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem; font-weight: 700;
+            color: var(--text); margin-bottom: 1.1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .section-num {
+            font-size: .8rem; font-weight: 700;
+            color: var(--accent); background: rgba(56,189,248,.1);
+            border: 1px solid rgba(56,189,248,.2);
+            padding: .2rem .55rem; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content-body p {
+            font-size: 1rem; line-height: 1.8;
+            color: var(--text-soft); margin-bottom: 1.1rem;
+        }
+
+        /* Lists */
+        .content-body ul, .content-body ol {
+            margin: .5rem 0 1.2rem 1.2rem;
+            color: var(--text-soft);
+        }
+        .content-body li {
+            font-size: 1rem; line-height: 1.75;
+            margin-bottom: .4rem; padding-left: .3rem;
+        }
+        .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            margin: 1.4rem 0; display: flex; gap: .9rem; align-items: flex-start;
+        }
+        .callout-info {
+            background: var(--callout-info);
+            border: 1px solid var(--callout-info-border);
+            border-left: 3px solid #38bdf8;
+        }
+        .callout-warn {
+            background: var(--callout-warn);
+            border: 1px solid var(--callout-warn-border);
+            border-left: 3px solid #fbbf24;
+        }
+        .callout-tip {
+            background: var(--callout-tip);
+            border: 1px solid var(--callout-tip-border);
+            border-left: 3px solid #4ade80;
+        }
+        .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+        .callout-body { flex: 1; }
+        .callout-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; margin-bottom: .3rem;
+        }
+        .callout-info .callout-label { color: #38bdf8; }
+        .callout-warn .callout-label { color: #fbbf24; }
+        .callout-tip .callout-label { color: #4ade80; }
+        .callout-body p {
+            font-size: .92rem; margin-bottom: 0; color: var(--text-soft);
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; font-weight: 500;
+            background: var(--bg3); color: var(--accent);
+            padding: .15rem .45rem; border-radius: 5px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--bg2); border: 1px solid var(--glass-border);
+            border-radius: 12px; overflow: hidden; margin: 1.2rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .6rem 1rem; border-bottom: 1px solid var(--glass-border);
+            background: var(--bg3);
+        }
+        .code-lang {
+            font-size: .72rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .copy-btn {
+            font-size: .72rem; font-weight: 600; color: var(--text-muted);
+            background: transparent; border: 1px solid var(--glass-border);
+            padding: .2rem .6rem; border-radius: 5px; cursor: pointer;
+            transition: all .2s;
+        }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .code-block pre {
+            padding: 1.1rem 1.2rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; line-height: 1.65;
+            color: var(--text-soft);
+            margin: 0;
+        }
+
+        /* Definition table */
+        .def-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .def-table th {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-muted);
+            padding: .7rem 1rem; text-align: left;
+            background: var(--bg3); border-bottom: 1px solid var(--glass-border);
+        }
+        .def-table th:first-child { border-radius: 8px 0 0 0; }
+        .def-table th:last-child { border-radius: 0 8px 0 0; }
+        .def-table td {
+            padding: .75rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-soft); vertical-align: top;
+        }
+        .def-table tr:last-child td { border-bottom: none; }
+        .def-table tr:hover td { background: var(--glass); }
+        .def-table td:first-child { font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: .82rem; white-space: nowrap; }
+
+        /* ===== COURSE FOOTER ===== */
+        .course-footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
+
+        .btn-dl {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; border-radius: 50px; text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all .3s;
+        }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
+
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: var(--text-soft);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 50px; text-decoration: none;
+            transition: all .3s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-areas: "content";
+            }
+            .toc { display: none; }
+            .breadcrumb { display: none; }
+        }
+        @media (max-width: 600px) {
+            .content-body, .course-header, .course-footer { padding: 1.5rem; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
+
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="btn-back">← Retour</a>
+            <div class="breadcrumb">
+                <a href="../index.html">Formations</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>CYB-047</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="reading-time">⏱ ~18 min de lecture</div>
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <aside class="toc">
+            <div class="toc-title">Table des matières</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#intro" data-section="intro">
+                        <span class="toc-num">00</span>Introduction
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-1" data-section="section-1">
+                        <span class="toc-num">01</span>Fondements de la CTI
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-2" data-section="section-2">
+                        <span class="toc-num">02</span>Sources de Threat Intelligence
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-3" data-section="section-3">
+                        <span class="toc-num">03</span>Indicateurs et Standards
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-4" data-section="section-4">
+                        <span class="toc-num">04</span>Modèles Analytiques
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-5" data-section="section-5">
+                        <span class="toc-num">05</span>Acteurs et Paysage
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Outils et Plateformes
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Intégration dans le SOC
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Cas Pratique
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-9" data-section="section-9">
+                        <span class="toc-num">09</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">10</span>Glossaire
+                    </a>
+                </li>
+            </ul>
+
+            <div class="toc-progress">
+                <div class="toc-prog-label">
+                    <span>Progression</span>
+                    <span id="toc-pct">0%</span>
+                </div>
+                <div class="toc-prog-track">
+                    <div class="toc-prog-fill" id="toc-prog-fill"></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+
+            <header class="course-header" id="intro">
+                <div class="header-meta">
+                    <span class="tag-module">CYB-047</span>
+                    <span class="tag-cat">Veille Cyber</span>
+                    <span class="status-done"><span class="status-dot"></span>Terminé</span>
+                </div>
+                <h1>Veille et intelligence cyber</h1>
+                <p class="course-intro">
+                    La cybersécurité défensive n'est pleinement efficace que lorsqu'elle s'appuie sur une connaissance approfondie de l'adversaire. Déployer des pare-feu, configurer des SIEM et auditer des configurations sont des démarches indispensables — mais elles restent fondamentalement réactives si elles ne sont pas alimentées par une compréhension continue des menaces qui ciblent l'organisation. C'est précisément le rôle de la Cyber Threat Intelligence (CTI) : transformer les informations disponibles sur les cybermenaces en connaissances actionnables permettant d'anticiper les attaques plutôt que de simplement les subir.
+                </p>
+                <div class="skill-row">
+                    <span class="skill-tag">CTI</span>
+                    <span class="skill-tag">OSINT</span>
+                    <span class="skill-tag">MISP</span>
+                    <span class="skill-tag">MITRE ATT&CK</span>
+                    <span class="skill-tag">STIX/TAXII</span>
+                    <span class="skill-tag">YARA</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <p>La threat intelligence n'est pas l'apanage des grands groupes disposant d'équipes dédiées de plusieurs dizaines d'analystes. Des sources ouvertes de grande qualité — les bulletins du CERT-FR, la matrice MITRE ATT&CK, les plateformes communautaires comme MISP et AlienVault OTX — permettent à toute organisation disposant d'une ressource sécurité d'une journée par semaine de construire une capacité de veille cyber opérationnelle. La différence entre une organisation qui détecte une campagne de phishing ciblant son secteur deux semaines après sa publication par le CERT et une organisation qui en était informée en 48 heures et avait déjà adapté ses règles de détection tient souvent à quelques processus de veille simples et réguliers.</p>
+                
+                <p>Ce cours explore les fondements, les sources, les méthodes et les outils de la veille et de l'intelligence cyber. Nous aborderons les quatre niveaux de la threat intelligence (stratégique, opérationnel, tactique, technique) et leurs applications respectives, les principales sources d'information et leurs modalités d'accès, les standards d'échange (STIX, TAXII, MISP), les modèles analytiques (Cyber Kill Chain, Diamond Model, Pyramid of Pain), les principaux acteurs de la menace et leurs modes opératoires documentés dans MITRE ATT&CK, et la mise en place concrète d'un processus de veille adapté aux contraintes d'une équipe à ressources limitées.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <ul style="margin:0; padding-left: 1.2rem; font-size: 0.95rem;">
+                            <li>Comprendre les 4 niveaux de la CTI et les modèles analytiques (Kill Chain, Diamond Model, Pyramid of Pain).</li>
+                            <li>Identifier et exploiter les sources OSINT et institutionnelles (CERT-FR, MISP, VirusTotal).</li>
+                            <li>Collecter, qualifier et échanger des IOC via STIX/TAXII.</li>
+                            <li>Déployer et utiliser MISP ou OpenCTI.</li>
+                            <li>Intégrer la threat intelligence dans le SOC (enrichissement SIEM, EDR, Threat Hunting).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section" id="section-1">
+                    <h2 class="section-title">
+                        <span class="section-num">01</span>
+                        Fondements de la Cyber Threat Intelligence
+                    </h2>
+
+                    <p>La Cyber Threat Intelligence (CTI) est le processus de collecte, d'analyse et d'exploitation d'informations sur les cybermenaces pour produire des renseignements actionnables permettant de mieux défendre un système d'information. Elle se distingue de la simple collecte d'informations par sa finalité : transformer des données brutes en connaissance contextualisée permettant de prendre de meilleures décisions de sécurité.</p>
+
+                    <p>La CTI répond à une réalité fondamentale : les défenseurs ne font jamais face à des attaques génériques et uniformes, mais à des acteurs spécifiques avec des motivations particulières, des cibles préférentielles et des méthodes caractéristiques. La CTI permet d'ajuster les défenses à la réalité des menaces pertinentes pour l'organisation.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Niveau</th>
+                                <th>Type</th>
+                                <th>Exemples concrets</th>
+                                <th>Audience principale</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Stratégique</td>
+                                <td>Tendances longues, géopolitique, évolution des acteurs</td>
+                                <td>Rapport annuel CrowdStrike Global Threat Report, rapport ANSSI sur les APT ciblant la France, analyse sectorielle des menaces</td>
+                                <td>Direction générale, COMEX, RSSI — décisions d'investissement et de gouvernance</td>
+                            </tr>
+                            <tr>
+                                <td>Opérationnel</td>
+                                <td>Campagnes d'attaque en cours, modes opératoires, TTP des groupes actifs</td>
+                                <td>Bulletin CERT-FR, rapport Mandiant sur une campagne APT, analyse d'un groupe ransomware actif</td>
+                                <td>RSSI, SOC Manager, équipes sécurité — planification défensive et priorisation</td>
+                            </tr>
+                            <tr>
+                                <td>Tactique</td>
+                                <td>Techniques et procédures détaillées permettant d'améliorer la détection</td>
+                                <td>Analyse de malware documentant les techniques ATT&CK utilisées, rapport de réponse à incident décrivant les TTPs d'un attaquant</td>
+                                <td>Analystes SOC N2/N3, ingénieurs sécurité — développement de règles de détection</td>
+                            </tr>
+                            <tr>
+                                <td>Technique</td>
+                                <td>Indicateurs de compromission immédiatement opérationnels</td>
+                                <td>Listes d'IP malveillantes, hashes de malwares, domaines C2, règles YARA et Sigma</td>
+                                <td>Outils automatisés (SIEM, EDR, pare-feu), analystes SOC N1 — blocage et détection en temps réel</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>La production de threat intelligence suit un <strong>cycle du renseignement</strong> structuré en six phases : Direction (planification), Collecte, Traitement, Analyse, Diffusion, et Retour d'expérience. Ce processus évite la collecte indiscriminée et garantit des résultats actionnables.</p>
+                </div>
+
+                <div class="section" id="section-2">
+                    <h2 class="section-title">
+                        <span class="section-num">02</span>
+                        Sources de Threat Intelligence
+                    </h2>
+
+                    <p>L'écosystème des sources s'étend des sources gratuites et ouvertes (CERT, milieu académique) aux flux commerciaux premium. La clé réside dans le ciblage et la fiabilité.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Type</th>
+                                <th>Contenu principal</th>
+                                <th>Accès</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CERT-FR (ANSSI)</td>
+                                <td>Officielle / OSINT</td>
+                                <td>Alertes sur vulnérabilités critiques, bulletins cybercriminels, avis de sécurité</td>
+                                <td>Gratuit — cert.ssi.gouv.fr</td>
+                            </tr>
+                            <tr>
+                                <td>MITRE ATT&CK</td>
+                                <td>Officielle / OSINT</td>
+                                <td>Matrice des TTP, profils des groupes APT, procédures d'atténuation</td>
+                                <td>Gratuit — attack.mitre.org</td>
+                            </tr>
+                            <tr>
+                                <td>AlienVault OTX (AT&T)</td>
+                                <td>Communautaire / OSINT</td>
+                                <td>Flux d'IOC partagés, pulses thématiques sur campagnes d'attaque</td>
+                                <td>Gratuit — otx.alienvault.com</td>
+                            </tr>
+                            <tr>
+                                <td>VirusTotal</td>
+                                <td>OSINT / Commercial</td>
+                                <td>Analyse fichiers/URLs, corrélation antivirus, graph de relations IOC</td>
+                                <td>Freemium — virustotal.com</td>
+                            </tr>
+                            <tr>
+                                <td>Shodan</td>
+                                <td>OSINT</td>
+                                <td>Cartographie des services exposés sur Internet, banner grabbing</td>
+                                <td>Freemium — shodan.io</td>
+                            </tr>
+                            <tr>
+                                <td>MISP (propre instance)</td>
+                                <td>Communautaire / Interne</td>
+                                <td>Partage d'IOC en communautés de confiance (ISAC), corrélation automatisée</td>
+                                <td>Open source</td>
+                            </tr>
+                            <tr>
+                                <td>Recorded Future / Mandiant</td>
+                                <td>Commercial</td>
+                                <td>Threat intelligence premium : dark web, profils APT détaillés, prédiction</td>
+                                <td>Payant</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>L'OSINT (Open Source Intelligence)</strong> permet de collecter des informations sur les acteurs malveillants depuis des sources légalement accessibles (forums, GitHub, Pastebin, Shodan). De plus, les communautés de partage <strong>(ISACs sectoriels)</strong> permettent d'amplifier la capacité de détection en unissant les forces de plusieurs organisations.</p>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        Indicateurs de Compromission et Standards
+                    </h2>
+
+                    <p>Les indicateurs de compromission (IOC) sont les empreintes numériques laissées par les activités malveillantes. Ils sont directement exploitables par les outils de détection.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Type d'IOC</th>
+                                <th>Exemples</th>
+                                <th>Utilisation défensive</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Hash de fichier</td>
+                                <td><code>d41d8cd98f00b204e9800998ecf8427e</code></td>
+                                <td>Blocage EDR/AV, recherche dans les logs SIEM</td>
+                            </tr>
+                            <tr>
+                                <td>Adresse IP malveillante</td>
+                                <td><code>185.220.101.45</code></td>
+                                <td>Blocage pare-feu/proxy, enrichissement SIEM</td>
+                            </tr>
+                            <tr>
+                                <td>Nom de domaine C2</td>
+                                <td><code>evil-c2-domain.ru</code></td>
+                                <td>Blocage DNS, alerte logs DNS historiques</td>
+                            </tr>
+                            <tr>
+                                <td>URL malveillante</td>
+                                <td><code>http://phishing-site.com/login.php</code></td>
+                                <td>Blocage proxy, filtrage web, alertes mail</td>
+                            </tr>
+                            <tr>
+                                <td>Clé de registre</td>
+                                <td><code>HKLM\Software\...\Run\malware_key</code></td>
+                                <td>Détection FIM et EDR, alerte SIEM</td>
+                            </tr>
+                            <tr>
+                                <td>Mutex / Artefact mémoire</td>
+                                <td>Nom de mutex créé par un malware</td>
+                                <td>Règle YARA en mémoire (EDR), règle Sigma</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-tip">
+                        <span class="callout-icon">✅</span>
+                        <div class="callout-body">
+                            <div class="callout-label">La Pyramid of Pain</div>
+                            <p>Développé par David Bianco, ce modèle hiérarchise les IOC selon la difficulté qu'impose leur invalidation pour l'attaquant. Les hashes et IPs (faciles à changer) sont au bas de la pyramide. Les TTPs (Tactiques, Techniques et Procédures) sont au sommet : forcer un attaquant à changer de TTP lui impose un coût de développement et de formation énorme.</p>
+                        </div>
+                    </div>
+
+                    <p><strong>Standards d'échange :</strong> STIX (Structured Threat Information eXpression) est le format JSON standard pour modéliser la CTI. TAXII est le protocole de transport de STIX. Ces standards assurent l'interopérabilité entre les plateformes (MISP, OpenCTI, etc.).</p>
+
+                    <div class="callout callout-warn">
+                        <span class="callout-icon">⚠️</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Le Traffic Light Protocol (TLP)</div>
+                            <p>Le TLP est un système de marquage définissant les droits de diffusion :<br>
+                            - <strong>TLP:RED</strong> : strictement confidentiel (audience d'origine uniquement).<br>
+                            - <strong>TLP:AMBER</strong> : partage limité au sein de l'organisation.<br>
+                            - <strong>TLP:GREEN</strong> : partage possible au sein de la communauté de pairs (ISAC).<br>
+                            - <strong>TLP:CLEAR</strong> (anciennement WHITE) : diffusion publique libre.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-4">
+                    <h2 class="section-title">
+                        <span class="section-num">04</span>
+                        Modèles Analytiques de la Threat Intelligence
+                    </h2>
+
+                    <p><strong>La Cyber Kill Chain :</strong> Modèle (Lockheed Martin, 2011) décrivant les phases séquentielles d'une cyberattaque (reconnaissance, armement, livraison, exploitation, installation, commandement & contrôle, actions sur objectifs). Son utilité réside dans l'identification des opportunités d'interruption : bloquer tôt réduit les dommages.</p>
+
+                    <p><strong>Le Diamond Model :</strong> Structure l'analyse autour de quatre sommets : l'Adversaire, la Capacité (technique/outil), l'Infrastructure et la Victime. La puissance analytique de ce modèle réside dans le <em>pivoting</em> : identifier un domaine C2 (Infrastructure) permet de trouver d'autres domaines similaires pour découvrir d'autres victimes et affiner l'attribution.</p>
+
+                    <p><strong>MITRE ATT&CK :</strong> Le référentiel central de la CTI. Chaque technique documentée est accompagnée des groupes l'utilisant et des moyens d'atténuation. Lors de l'analyse d'un incident, mapper les techniques sur ATT&CK permet d'identifier le groupe potentiel et d'anticiper ses prochains mouvements (Threat-informed defense).</p>
+                </div>
+
+                <div class="section" id="section-5">
+                    <h2 class="section-title">
+                        <span class="section-num">05</span>
+                        Acteurs de la Menace et Paysage des Risques
+                    </h2>
+
+                    <p>Les acteurs se distinguent par leurs motivations : groupes <strong>APT</strong> (soutenus par des États, ressources massives, furtifs, axés sur l'espionnage), <strong>cybercriminels</strong> (motivés par le profit, RaaS, fraude BEC), <strong>hacktivistes</strong> (motivation politique) et <strong>menaces internes</strong>.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Groupe</th>
+                                <th>Origine supposée</th>
+                                <th>Secteurs ciblés</th>
+                                <th>Techniques caractéristiques (ATT&CK)</th>
+                                <th>Outils connus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>APT28 (Fancy Bear)</td>
+                                <td>Russie — GRU</td>
+                                <td>Gouvernements, défense, politique</td>
+                                <td>Spearphishing (T1566), credential dumping (T1003)</td>
+                                <td>X-Agent, Sofacy, LOJAX</td>
+                            </tr>
+                            <tr>
+                                <td>APT29 (Cozy Bear)</td>
+                                <td>Russie — SVR</td>
+                                <td>Gouvernements, recherche, pharma</td>
+                                <td>Supply chain (T1195), Golden SAML</td>
+                                <td>SUNBURST, TEARDROP</td>
+                            </tr>
+                            <tr>
+                                <td>APT41 (Winnti)</td>
+                                <td>Chine — double mission</td>
+                                <td>Tech, santé, jeux vidéo, télécoms</td>
+                                <td>Exploitation web (T1190), backdoors persistants</td>
+                                <td>HIGHNOON, Cobalt Strike</td>
+                            </tr>
+                            <tr>
+                                <td>Lazarus Group</td>
+                                <td>Corée du Nord — RGB</td>
+                                <td>Finance, crypto, défense, médias</td>
+                                <td>Spearphishing LinkedIn, 0-day, wipers</td>
+                                <td>HOPLIGHT, FASTCash</td>
+                            </tr>
+                            <tr>
+                                <td>LockBit (RaaS)</td>
+                                <td>Cybercriminel (RU/EU)</td>
+                                <td>Tous secteurs (PME à multinationales)</td>
+                                <td>RaaS, double extorsion, exfiltration (T1041)</td>
+                                <td>LockBit 3.0, StealBit</td>
+                            </tr>
+                            <tr>
+                                <td>Scattered Spider</td>
+                                <td>Cybercriminel anglophone</td>
+                                <td>Finance, assurance, télécoms, tech</td>
+                                <td>SIM swapping, MFA fatigue (T1621)</td>
+                                <td>Outils légitimes (RMM)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>L'évaluation du risque sectoriel est primordiale. Les rapports (Verizon DBIR, ANSSI) permettent de filtrer les menaces et de prioriser les efforts de veille selon le profil de l'organisation.</p>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Outils et Plateformes de Threat Intelligence
+                    </h2>
+
+                    <p>Le choix de la plateforme dépend de la maturité et du besoin (centralisation IOC vs structuration analytique).</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Plateforme</th>
+                                <th>Type</th>
+                                <th>Cas d'usage principal en veille</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MISP</td>
+                                <td>Open source</td>
+                                <td>Centralisation et partage d'IOC ; corrélation avec SIEM via connecteurs</td>
+                            </tr>
+                            <tr>
+                                <td>OpenCTI</td>
+                                <td>Open source</td>
+                                <td>Gestion des relations (STIX 2.1) entre campagnes, acteurs et techniques</td>
+                            </tr>
+                            <tr>
+                                <td>YETI</td>
+                                <td>Open source</td>
+                                <td>Base de connaissances malwares/acteurs, collaboration entre analystes</td>
+                            </tr>
+                            <tr>
+                                <td>VirusTotal Enterprise</td>
+                                <td>Commercial</td>
+                                <td>Analyse fichiers/URLs, graph de relations, recherche rétrospective (YARA)</td>
+                            </tr>
+                            <tr>
+                                <td>Feedly for Threat Intel</td>
+                                <td>Commercial</td>
+                                <td>Agrégation OSINT, extraction d'IOC depuis articles via IA</td>
+                            </tr>
+                            <tr>
+                                <td>Shodan Monitor</td>
+                                <td>Commercial</td>
+                                <td>Surveillance continue de l'exposition Internet de l'organisation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Intégration de la CTI dans le SOC
+                    </h2>
+
+                    <p>L'intégration permet d'enrichir automatiquement les alertes SIEM : une connexion vers une IP répertoriée dans MISP déclenche immédiatement un contexte. Dans Wazuh, le module <code>virustotal</code> scrute les hashes de fichiers ; dans ELK, Logstash interroge les APIs CTI.</p>
+
+                    <p><strong>Règles de détection CTI :</strong> Les règles Sigma constituent le standard. Elles décrivent des patterns de détection basés sur les TTPs (indépendantes du SIEM) et se convertissent facilement (Splunk, Elastic, Wazuh).</p>
+
+                    <p><strong>Threat Hunting Guidé :</strong> Le threat hunting est la recherche proactive. Le hunter formule une hypothèse basée sur un profil d'acteur, interroge les logs (EQL, live hunt EDR) et capitalise en transformant les comportements suspects validés en règles permanentes.</p>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Cas Pratique — Programme de Veille pour une ETI
+                    </h2>
+
+                    <p><strong>Contexte :</strong> MedDevice SA (320 salariés, dispositifs médicaux, données R&D sensibles). Le RSSI crée un programme de veille avec un jour/semaine suite à des attaques APT et Ransomwares dans le secteur.</p>
+                    
+                    <p><strong>Programme :</strong> 
+                    <br>- <em>Quotidien (30 min) :</em> Flux RSS CERT-FR et éditeurs via Feedly (alertes CVE critiques).
+                    <br>- <em>Hebdomadaire (3h) :</em> Revue MISP (Health-ISAC), analyse VirusTotal des alertes, vérification Shodan.
+                    <br>- <em>Mensuel (0.5 jour) :</em> Synthèse managériale et mise à jour des profils de risque.</p>
+
+                    <p><strong>Déploiement MISP :</strong> Intégration de flux CIRCL, CERT-FR, et Health-ISAC avec des connecteurs vers le SIEM et le pare-feu. En 2 semaines, sur 1247 IOCs, 2 vrais positifs (tentative de connexion à un C2 ransomware et phishing bloqué) sont remontés.</p>
+
+                    <p><strong>Bilan :</strong> Coût d'infrastructure négligeable, temps investi de 20% ETP, et ROI prouvé par des incidents étouffés dans l'œuf et une réduction drastique du temps de traitement des CVE critiques.</p>
+                </div>
+
+                <div class="section" id="section-9">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Trois grandes leçons synthétisent ce module :</p>
+                    <ol>
+                        <li><strong>La pertinence prime sur l'exhaustivité :</strong> Cibler les informations en fonction de son secteur et de ses technologies est bien plus efficace que d'accumuler aveuglément des millions d'IOC.</li>
+                        <li><strong>La CTI n'a de valeur que connectée :</strong> Une analyse APT non traduite en règle SIEM, EDR ou pare-feu n'est qu'un exercice intellectuel. L'information doit déclencher l'action.</li>
+                        <li><strong>La communauté est le plus grand multiplicateur :</strong> Participer à des ISACs et échanger (en respectant le TLP) décuple les capacités de détection des organisations face aux attaquants.</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">10</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>APT</td>
+                                <td>Advanced Persistent Threat — acteur malveillant disposant de ressources importantes (souvent étatiques), opérant sur le long terme avec des techniques furtives et des objectifs ciblés (espionnage, sabotage, vol de données).</td>
+                            </tr>
+                            <tr>
+                                <td>CTI</td>
+                                <td>Cyber Threat Intelligence — renseignement sur les cybermenaces : ensemble des informations collectées, analysées et exploitées pour comprendre les menaces et anticiper les attaques.</td>
+                            </tr>
+                            <tr>
+                                <td>Diamond Model</td>
+                                <td>Modèle analytique de la threat intelligence structurant un incident autour de quatre axes : l'adversaire, sa capacité (malware/outil), l'infrastructure utilisée et la victime ciblée.</td>
+                            </tr>
+                            <tr>
+                                <td>ISAC</td>
+                                <td>Information Sharing and Analysis Center — organisation sectorielle facilitant le partage d'informations sur les menaces et les incidents entre acteurs d'un même secteur d'activité.</td>
+                            </tr>
+                            <tr>
+                                <td>IOC</td>
+                                <td>Indicator of Compromise — observable technique (hash, IP, domaine, clé de registre, mutex) permettant d'identifier la présence ou l'activité d'une menace dans un système ou sur un réseau.</td>
+                            </tr>
+                            <tr>
+                                <td>Kill Chain</td>
+                                <td>Modèle de décomposition d'une cyberattaque en sept phases séquentielles (reconnaissance, armement, livraison, exploitation, installation, C&C, actions sur objectifs) permettant d'identifier les opportunités d'interruption.</td>
+                            </tr>
+                            <tr>
+                                <td>MISP</td>
+                                <td>Malware Information Sharing Platform — plateforme open source de partage d'IOC et d'informations sur les menaces, utilisée par les CERT, SOC et organisations au sein de communautés de confiance.</td>
+                            </tr>
+                            <tr>
+                                <td>OpenCTI</td>
+                                <td>Plateforme open source de gestion de la threat intelligence structurée selon le standard STIX 2.1, permettant de modéliser les relations entre acteurs, campagnes, techniques et indicateurs.</td>
+                            </tr>
+                            <tr>
+                                <td>OSINT</td>
+                                <td>Open Source Intelligence — renseignement issu de sources ouvertes et publiquement accessibles : sites web, réseaux sociaux, forums, bases de données publiques, publications techniques.</td>
+                            </tr>
+                            <tr>
+                                <td>Pyramid of Pain</td>
+                                <td>Modèle de David Bianco hiérarchisant les IOC selon la difficulté qu'impose leur invalidation pour l'attaquant : des hashes (faciles à changer) aux TTP (très coûteux à modifier).</td>
+                            </tr>
+                            <tr>
+                                <td>STIX</td>
+                                <td>Structured Threat Information eXpression — standard ouvert de représentation de la threat intelligence en JSON, permettant l'interopérabilité entre plateformes CTI.</td>
+                            </tr>
+                            <tr>
+                                <td>TAXII</td>
+                                <td>Trusted Automated eXchange of Intelligence Information — protocole de transport standardisé pour l'échange automatisé de données STIX entre plateformes de threat intelligence.</td>
+                            </tr>
+                            <tr>
+                                <td>Threat Actor</td>
+                                <td>Entité (individu, groupe, État) responsable d'activités malveillantes contre des systèmes d'information, caractérisée par ses motivations, ses capacités et ses cibles préférentielles.</td>
+                            </tr>
+                            <tr>
+                                <td>TTP</td>
+                                <td>Tactiques, Techniques et Procédures — description structurée du comportement d'un acteur malveillant, formalisée dans la matrice MITRE ATT&CK. Représente la connaissance la plus durable sur un adversaire.</td>
+                            </tr>
+                            <tr>
+                                <td>YARA</td>
+                                <td>Langage de description de patterns permettant de créer des règles de détection de malwares basées sur des caractéristiques de leur contenu binaire ou textuel, utilisables par les EDR et les outils forensiques.</td>
+                            </tr>
+                            <tr>
+                                <td>Zero-day (0-day)</td>
+                                <td>Vulnérabilité inconnue de l'éditeur et pour laquelle aucun correctif n'existe au moment de son exploitation, offrant à l'attaquant un avantage défensif significatif.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <footer class="course-footer">
+                <div class="footer-info">
+                    <p>Module suivant</p>
+                    <strong>CYB-048 — Sécurité périmétrique et DMZ →</strong>
+                </div>
+                <div class="footer-actions">
+                    <a href="CYB-046.html" class="btn-nav">
+                        ← Module précédent
+                    </a>
+                    <a href="pdf/CYB-047.pdf" download="CYB-047.pdf" class="btn-dl">
+                        ⬇ Télécharger le PDF contenant le cours complet
+                    </a>
+                    <a href="CYB-048.html" class="btn-nav">
+                        Module suivant →
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        </div>
+    <script>
+        /* ===== SCROLL PROGRESS ===== */
+        const bar = document.getElementById('progress-bar');
+        const tocFill = document.getElementById('toc-prog-fill');
+        const tocPct = document.getElementById('toc-pct');
+
+        function updateScroll() {
+            const scrolled = window.scrollY;
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? scrolled / total * 100 : 0;
+            bar.style.width = pct + '%';
+            tocFill.style.width = pct + '%';
+            tocPct.textContent = Math.round(pct) + '%';
+        }
+
+        /* ===== ACTIVE TOC LINK ===== */
+        const sections = document.querySelectorAll('[id]');
+        const tocLinks = document.querySelectorAll('.toc-item a');
+
+        function updateTOC() {
+            let current = '';
+            sections.forEach(sec => {
+                const top = sec.getBoundingClientRect().top;
+                if (top <= 100) current = sec.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === current);
+            });
+        }
+
+        window.addEventListener('scroll', () => { updateScroll(); updateTOC(); }, { passive: true });
+        updateScroll(); updateTOC();
+
+        /* ===== THEME ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== COPY CODE ===== */
+        function copyCode(btn) {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copié ✓';
+                btn.style.color = '#4ade80';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+            });
+        }
+    </script>
+
+</body>
+</html>

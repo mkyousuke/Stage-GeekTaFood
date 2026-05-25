@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB-048 — Sécurité périmétrique et DMZ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME ===== */
+        :root {
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.3);
+            --radius: 16px;
+            --transition: .4s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.75);
+            --nav-bg: rgba(3,7,18,.8);
+            --callout-info: rgba(56,189,248,.08);
+            --callout-warn: rgba(251,191,36,.08);
+            --callout-tip: rgba(74,222,128,.08);
+            --callout-info-border: rgba(56,189,248,.3);
+            --callout-warn-border: rgba(251,191,36,.3);
+            --callout-tip-border: rgba(74,222,128,.3);
+        }
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e4eefb;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.75);
+            --glass-border: rgba(100,140,210,.18);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,.85);
+            --nav-bg: rgba(240,246,255,.88);
+            --callout-info: rgba(14,165,233,.07);
+            --callout-warn: rgba(217,119,6,.07);
+            --callout-tip: rgba(22,163,74,.07);
+            --callout-info-border: rgba(14,165,233,.3);
+            --callout-warn-border: rgba(217,119,6,.3);
+            --callout-tip-border: rgba(22,163,74,.3);
+        }
+
+        /* ===== RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ===== SCROLL PROGRESS ===== */
+        #progress-bar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6);
+            z-index: 9999; transition: width .1s linear;
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ===== BACKGROUND ===== */
+        .bg-shape {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        [data-theme="dark"] .bg-shape { opacity: .3; }
+        [data-theme="light"] .bg-shape { opacity: .12; }
+        .s1 { width:550px;height:550px;background:#1d4ed8;top:-150px;left:-120px; }
+        .s2 { width:600px;height:600px;background:#6d28d9;bottom:-200px;right:-150px;animation-delay:-8s; }
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(60px,80px) scale(1.1); }
+        }
+
+        /* ===== TOP NAV ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            height: 64px; padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500; transition: background var(--transition);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .4rem .9rem; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-soft);
+            text-decoration: none; font-weight: 600; font-size: .85rem;
+            transition: all .25s; cursor: pointer;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .breadcrumb a:hover { color: var(--accent); }
+        .breadcrumb-sep { opacity: .4; }
+
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .reading-time {
+            font-size: .8rem; color: var(--text-muted);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: .3rem .8rem; border-radius: 8px;
+            display: flex; align-items: center; gap: .3rem;
+        }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-areas: "toc content";
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 84px 2rem 5rem;
+            position: relative; z-index: 1;
+            align-items: start;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            grid-area: toc;
+            position: sticky; top: 80px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .toc::-webkit-scrollbar { width: 4px; }
+        .toc::-webkit-scrollbar-track { background: transparent; }
+        .toc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .toc-title {
+            font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: .9rem; padding-bottom: .7rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toc-list { list-style: none; display: flex; flex-direction: column; gap: .15rem; }
+
+        .toc-item a {
+            display: flex; align-items: flex-start; gap: .5rem;
+            padding: .4rem .6rem; border-radius: 8px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: .83rem; font-weight: 500; line-height: 1.4;
+            transition: all .2s;
+            border-left: 2px solid transparent;
+        }
+        .toc-item a:hover { color: var(--text); background: var(--glass); }
+        .toc-item a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.07); }
+        .toc-num { font-size: .72rem; color: var(--accent); font-weight: 700; flex-shrink: 0; padding-top: .1rem; }
+
+        /* Progress in TOC */
+        .toc-progress {
+            margin-top: 1.2rem; padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .toc-prog-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+        }
+        .toc-prog-label span:last-child { color: var(--accent); font-weight: 600; }
+        .toc-prog-track {
+            height: 4px; background: var(--bg3); border-radius: 50px; overflow: hidden;
+        }
+        .toc-prog-fill {
+            height: 100%; border-radius: 50px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            width: 0%; transition: width .3s ease;
+        }
+
+        /* ===== COURSE CONTENT ===== */
+        .content {
+            grid-area: content;
+            min-width: 0;
+        }
+
+        /* Course header */
+        .course-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: .8rem;
+            flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+
+        .tag-module {
+            background: rgba(56,189,248,.12);
+            color: #38bdf8; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 700; letter-spacing: .5px;
+            border: 1px solid rgba(56,189,248,.25);
+        }
+        .tag-cat {
+            background: rgba(129,140,248,.1);
+            color: #a78bfa; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 600;
+            border: 1px solid rgba(129,140,248,.2);
+        }
+        .status-done {
+            display: flex; align-items: center; gap: .35rem;
+            background: rgba(74,222,128,.1); color: #4ade80;
+            border: 1px solid rgba(74,222,128,.2);
+            padding: .3rem .8rem; border-radius: 30px;
+            font-size: .78rem; font-weight: 600;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .course-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 800; line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f1f5f9 40%, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .course-header h1 {
+            background: linear-gradient(135deg, #0f172a 40%, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .course-intro {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-soft); margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+        }
+        .skill-tag {
+            font-size: .75rem; font-weight: 600;
+            padding: .25rem .7rem; border-radius: 7px;
+            background: var(--bg3);
+            color: var(--text-soft);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ===== CONTENT BODY ===== */
+        .content-body {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sections */
+        .section { margin-bottom: 3rem; }
+        .section:last-of-type { margin-bottom: 0; }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem; font-weight: 700;
+            color: var(--text); margin-bottom: 1.1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .section-num {
+            font-size: .8rem; font-weight: 700;
+            color: var(--accent); background: rgba(56,189,248,.1);
+            border: 1px solid rgba(56,189,248,.2);
+            padding: .2rem .55rem; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content-body p {
+            font-size: 1rem; line-height: 1.8;
+            color: var(--text-soft); margin-bottom: 1.1rem;
+        }
+
+        /* Lists */
+        .content-body ul, .content-body ol {
+            margin: .5rem 0 1.2rem 1.2rem;
+            color: var(--text-soft);
+        }
+        .content-body li {
+            font-size: 1rem; line-height: 1.75;
+            margin-bottom: .4rem; padding-left: .3rem;
+        }
+        .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            margin: 1.4rem 0; display: flex; gap: .9rem; align-items: flex-start;
+        }
+        .callout-info {
+            background: var(--callout-info);
+            border: 1px solid var(--callout-info-border);
+            border-left: 3px solid #38bdf8;
+        }
+        .callout-warn {
+            background: var(--callout-warn);
+            border: 1px solid var(--callout-warn-border);
+            border-left: 3px solid #fbbf24;
+        }
+        .callout-tip {
+            background: var(--callout-tip);
+            border: 1px solid var(--callout-tip-border);
+            border-left: 3px solid #4ade80;
+        }
+        .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+        .callout-body { flex: 1; }
+        .callout-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; margin-bottom: .3rem;
+        }
+        .callout-info .callout-label { color: #38bdf8; }
+        .callout-warn .callout-label { color: #fbbf24; }
+        .callout-tip .callout-label { color: #4ade80; }
+        .callout-body p {
+            font-size: .92rem; margin-bottom: 0; color: var(--text-soft);
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; font-weight: 500;
+            background: var(--bg3); color: var(--accent);
+            padding: .15rem .45rem; border-radius: 5px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--bg2); border: 1px solid var(--glass-border);
+            border-radius: 12px; overflow: hidden; margin: 1.2rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .6rem 1rem; border-bottom: 1px solid var(--glass-border);
+            background: var(--bg3);
+        }
+        .code-lang {
+            font-size: .72rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .copy-btn {
+            font-size: .72rem; font-weight: 600; color: var(--text-muted);
+            background: transparent; border: 1px solid var(--glass-border);
+            padding: .2rem .6rem; border-radius: 5px; cursor: pointer;
+            transition: all .2s;
+        }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .code-block pre {
+            padding: 1.1rem 1.2rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; line-height: 1.65;
+            color: var(--text-soft);
+            margin: 0;
+        }
+
+        /* Definition table */
+        .def-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .def-table th {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-muted);
+            padding: .7rem 1rem; text-align: left;
+            background: var(--bg3); border-bottom: 1px solid var(--glass-border);
+        }
+        .def-table th:first-child { border-radius: 8px 0 0 0; }
+        .def-table th:last-child { border-radius: 0 8px 0 0; }
+        .def-table td {
+            padding: .75rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-soft); vertical-align: top;
+        }
+        .def-table tr:last-child td { border-bottom: none; }
+        .def-table tr:hover td { background: var(--glass); }
+        .def-table td:first-child { font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: .82rem; white-space: nowrap; }
+
+        /* ===== COURSE FOOTER ===== */
+        .course-footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
+
+        .btn-dl {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; border-radius: 50px; text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all .3s;
+        }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
+
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: var(--text-soft);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 50px; text-decoration: none;
+            transition: all .3s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-areas: "content";
+            }
+            .toc { display: none; }
+            .breadcrumb { display: none; }
+        }
+        @media (max-width: 600px) {
+            .content-body, .course-header, .course-footer { padding: 1.5rem; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
+
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="btn-back">← Retour</a>
+            <div class="breadcrumb">
+                <a href="../index.html">Formations</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>CYB-048</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="reading-time">⏱ ~20 min de lecture</div>
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <aside class="toc">
+            <div class="toc-title">Table des matières</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#intro" data-section="intro">
+                        <span class="toc-num">00</span>Introduction
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-1" data-section="section-1">
+                        <span class="toc-num">01</span>Fondements de la Sécurité
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-2" data-section="section-2">
+                        <span class="toc-num">02</span>La Zone Démilitarisée
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-3" data-section="section-3">
+                        <span class="toc-num">03</span>Gestion des Flux
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-4" data-section="section-4">
+                        <span class="toc-num">04</span>Services en DMZ
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-5" data-section="section-5">
+                        <span class="toc-num">05</span>Filtrage Applicatif
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Vecteurs d'Attaque
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Évolution du Périmètre
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Cas Pratique
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-9" data-section="section-9">
+                        <span class="toc-num">09</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">10</span>Glossaire
+                    </a>
+                </li>
+            </ul>
+
+            <div class="toc-progress">
+                <div class="toc-prog-label">
+                    <span>Progression</span>
+                    <span id="toc-pct">0%</span>
+                </div>
+                <div class="toc-prog-track">
+                    <div class="toc-prog-fill" id="toc-prog-fill"></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+
+            <header class="course-header" id="intro">
+                <div class="header-meta">
+                    <span class="tag-module">CYB-048</span>
+                    <span class="tag-cat">Infrastructure & Réseaux</span>
+                    <span class="status-done"><span class="status-dot"></span>Terminé</span>
+                </div>
+                <h1>Sécurité périmétrique et DMZ</h1>
+                <p class="course-intro">
+                    La sécurité périmétrique est l'une des disciplines fondatrices de la cyberdéfense. Avant que les architectures Zero Trust, les solutions SASE et le cloud computing ne viennent complexifier le paysage, la protection du système d'information reposait sur un principe simple et puissant : ériger une frontière robuste entre le réseau interne de confiance et le monde extérieur hostile. Cette frontière — le périmètre réseau — reste aujourd'hui un pilier incontournable de toute stratégie de défense en profondeur, même si elle ne peut plus, à elle seule, constituer la totalité de la réponse sécurité d'une organisation.
+                </p>
+                <div class="skill-row">
+                    <span class="skill-tag">DMZ</span>
+                    <span class="skill-tag">Pare-feu</span>
+                    <span class="skill-tag">WAF</span>
+                    <span class="skill-tag">Proxy</span>
+                    <span class="skill-tag">Zero Trust</span>
+                    <span class="skill-tag">SASE</span>
+                    <span class="skill-tag">IPS</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <p>Au cœur de la sécurité périmétrique se trouve la DMZ — Zone Démilitarisée. Ce concept, emprunté au vocabulaire militaire, désigne la zone tampon interposée entre deux forces antagonistes. En informatique, la DMZ est le réseau intermédiaire qui héberge les services devant être accessibles depuis Internet — serveur web, passerelle e-mail, concentrateur VPN — tout en les isolant du réseau interne privé. Correctement architecturée, la DMZ garantit qu'une compromission d'un service exposé ne se transforme pas automatiquement en compromission du cœur du système d'information.</p>
+                
+                <p>Ce cours explore en profondeur les principes et les techniques de la sécurité périmétrique moderne : la conception des zones de sécurité et de leur hiérarchie de confiance, les architectures de DMZ adaptées à différents contextes organisationnels, la gestion rigoureuse des flux interzones, le placement et la configuration des services exposés, et les mécanismes de filtrage applicatif complémentaires au pare-feu réseau. Il aborde également les évolutions récentes — cloud hybride, Zero Trust, SASE — qui redéfinissent progressivement les contours du périmètre traditionnel.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <ul style="margin:0; padding-left: 1.2rem; font-size: 0.95rem;">
+                            <li>Définir les zones de sécurité d'un SI (Internet, DMZ, LAN, Serveurs, OT) et leurs niveaux de confiance.</li>
+                            <li>Construire une matrice de flux interzones complète et rédiger des règles de filtrage.</li>
+                            <li>Configurer des services exposés (reverse proxy, passerelle mail, bastion) dans une DMZ.</li>
+                            <li>Mettre en œuvre des mécanismes de filtrage applicatif (WAF, proxy filtrant, IPS).</li>
+                            <li>Appréhender les architectures SASE et le modèle Zero Trust.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section" id="section-1">
+                    <h2 class="section-title">
+                        <span class="section-num">01</span>
+                        Fondements de la Sécurité Périmétrique
+                    </h2>
+
+                    <p>Le modèle de sécurité périmétrique repose sur une analogie simple et intuitive : le château fort médiéval. Les murailles, les douves et les tours de guet constituent le périmètre défensif ; tout ce qui se trouve à l'intérieur est considéré comme sûr, tout ce qui est à l'extérieur est hostile. Traduit en informatique, ce modèle définit un réseau interne de confiance (le LAN), séparé du monde extérieur (Internet) par des équipements de sécurité périmétrique — pare-feu, IPS, proxy — dont la mission est de contrôler rigoureusement tout ce qui franchit la frontière.</p>
+
+                    <p>La sécurité périmétrique moderne ne se limite pas à une frontière unique entre dedans et dehors. Elle s'organise en zones de sécurité multiples, chacune définie par un niveau de confiance et des politiques d'accès spécifiques. Ce zonage est le socle de toute architecture réseau sécurisée : il permet d'appliquer le principe du moindre privilège au niveau réseau.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Zone</th>
+                                <th>Niveau de confiance</th>
+                                <th>Exemples de systèmes</th>
+                                <th>Politique d'accès</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Internet (WAN)</td>
+                                <td>Nul — zone hostile par définition</td>
+                                <td>Clients externes, partenaires, attaquants</td>
+                                <td>Aucun accès direct vers le LAN ou les serveurs internes</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ publique</td>
+                                <td>Faible — systèmes exposés</td>
+                                <td>Serveur web, reverse proxy, passerelle mail, DNS externe</td>
+                                <td>Accessible depuis Internet sur ports autorisés ; accès vers LAN strictement interdit</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ privée</td>
+                                <td>Modéré — services internes semi-exposés</td>
+                                <td>Serveur de fichiers partenaires, API B2B, bastion SSH</td>
+                                <td>Accessible depuis LAN et partenaires identifiés ; accès vers LAN filtré</td>
+                            </tr>
+                            <tr>
+                                <td>LAN (réseau interne)</td>
+                                <td>Élevé — réseau des utilisateurs</td>
+                                <td>Postes de travail, imprimantes, téléphonie IP</td>
+                                <td>Accès sortant autorisé (proxy) ; accès entrant depuis Internet interdit</td>
+                            </tr>
+                            <tr>
+                                <td>Zone serveurs</td>
+                                <td>Élevé — applications critiques</td>
+                                <td>ERP, bases de données, AD, messagerie interne</td>
+                                <td>Accessible uniquement depuis LAN sur ports applicatifs ; accès depuis DMZ restreint</td>
+                            </tr>
+                            <tr>
+                                <td>Zone management</td>
+                                <td>Très élevé — administration</td>
+                                <td>Bastion, consoles d'administration, SIEM</td>
+                                <td>Accessible uniquement depuis postes d'administration identifiés ; accès depuis Internet interdit</td>
+                            </tr>
+                            <tr>
+                                <td>Zone OT / SCADA</td>
+                                <td>Critique — isolée</td>
+                                <td>Automates industriels, SCADA, capteurs IoT</td>
+                                <td>Isolée du LAN ; échanges via diode de données unidirectionnelle si nécessaire</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-tip">
+                        <span class="callout-icon">✅</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Le Principe de Defense in Depth</div>
+                            <p>La défense en profondeur postule qu'aucune mesure de sécurité n'est infaillible. La protection réelle provient de la superposition de plusieurs couches de défense indépendantes (pare-feu, WAF, IPS, segmentation, MFA). Chaque couche est conçue pour être efficace même si la couche précédente a été contournée.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-2">
+                    <h2 class="section-title">
+                        <span class="section-num">02</span>
+                        La Zone Démilitarisée — Conception et Architecture
+                    </h2>
+
+                    <p>La DMZ (DeMilitarized Zone) est le réseau intermédiaire entre Internet et le réseau interne privé, hébergeant les services devant être accessibles depuis l'extérieur tout en protégeant le réseau interne d'une compromission directe. Si un service exposé en DMZ est compromis par un attaquant, celui-ci se retrouve dans une zone isolée, sans accès direct au réseau interne.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Architecture</th>
+                                <th>Description</th>
+                                <th>Avantages</th>
+                                <th>Inconvénients</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>DMZ à un pare-feu</td>
+                                <td>Un seul pare-feu multi-interface (WAN, DMZ, LAN)</td>
+                                <td>Simple, économique, adapté aux petites structures</td>
+                                <td>Point de défaillance unique ; compromission du pare-feu = compromission totale</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ à deux pare-feu (sandwich)</td>
+                                <td>Deux pare-feu distincts encadrant la DMZ (FW externe + FW interne)</td>
+                                <td>Défense en profondeur réelle ; compromission d'un FW ne suffit pas</td>
+                                <td>Plus coûteux, gestion plus complexe, latence légèrement accrue</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ avec pare-feu différents (hétérogène)</td>
+                                <td>Deux pare-feu de constructeurs différents (ex : Fortinet + pfSense)</td>
+                                <td>Élimine le risque d'exploitation d'une même CVE sur les deux équipements</td>
+                                <td>Compétences doubles requises, maintenance plus lourde</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ cloud hybride</td>
+                                <td>Services exposés dans le cloud (AWS WAF, Azure Front Door) + réseau interne on-premise</td>
+                                <td>Scalabilité, protection DDoS native, répartition géographique</td>
+                                <td>Dépendance cloud, complexité des flux hybrides, visibilité réduite sans CASB</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>L'<strong>architecture à deux pare-feu</strong>, souvent appelée architecture en sandwich, est la référence en matière de DMZ sécurisée. Le pare-feu externe filtre le trafic entre Internet et la DMZ ; le pare-feu interne filtre le trafic entre la DMZ et le réseau interne.</p>
+
+                    <p>Une architecture mature distingue fréquemment deux zones DMZ de niveaux de confiance différents : la <strong>DMZ publique</strong>, sans authentification préalable (serveur web public, proxy, mail entrant), et la <strong>DMZ privée</strong>, accessible uniquement depuis des sources identifiées (partenaires B2B, bastion SSH).</p>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        Gestion des Flux Interzones
+                    </h2>
+
+                    <p>La matrice de flux est le document qui formalise l'ensemble des communications autorisées entre les zones de sécurité. C'est la traduction opérationnelle de la politique de sécurité réseau.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Destination</th>
+                                <th>Protocole/Port</th>
+                                <th>Autorisation</th>
+                                <th>Justification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Internet</td>
+                                <td>DMZ — Reverse proxy</td>
+                                <td>TCP/443 HTTPS</td>
+                                <td>Autorisé</td>
+                                <td>Accès web public des utilisateurs externes</td>
+                            </tr>
+                            <tr>
+                                <td>Internet</td>
+                                <td>DMZ — Passerelle mail</td>
+                                <td>TCP/25 SMTP</td>
+                                <td>Autorisé (filtré)</td>
+                                <td>Réception des e-mails entrants via antispam</td>
+                            </tr>
+                            <tr>
+                                <td>Internet</td>
+                                <td>LAN ou Zone serveurs</td>
+                                <td>Tout</td>
+                                <td>Interdit</td>
+                                <td>Aucun accès direct depuis Internet vers le réseau interne</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ</td>
+                                <td>Zone serveurs — Back-end</td>
+                                <td>TCP/8080, TCP/5432</td>
+                                <td>Autorisé (restreint)</td>
+                                <td>Le front-end DMZ interroge le back-end applicatif sur port applicatif uniquement</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ</td>
+                                <td>LAN</td>
+                                <td>Tout</td>
+                                <td>Interdit</td>
+                                <td>Isolation stricte : une DMZ compromise ne doit pas atteindre le LAN</td>
+                            </tr>
+                            <tr>
+                                <td>LAN</td>
+                                <td>Internet</td>
+                                <td>TCP/443 HTTPS</td>
+                                <td>Autorisé (proxy)</td>
+                                <td>Navigation web des utilisateurs via proxy filtrant</td>
+                            </tr>
+                            <tr>
+                                <td>LAN</td>
+                                <td>Zone serveurs</td>
+                                <td>TCP/applicatif</td>
+                                <td>Autorisé (filtré)</td>
+                                <td>Accès des postes aux applications métier sur ports définis</td>
+                            </tr>
+                            <tr>
+                                <td>LAN</td>
+                                <td>DMZ</td>
+                                <td>Tout</td>
+                                <td>Interdit par défaut</td>
+                                <td>Les utilisateurs internes n'ont pas à accéder directement aux serveurs DMZ</td>
+                            </tr>
+                            <tr>
+                                <td>Zone management</td>
+                                <td>Toutes zones</td>
+                                <td>TCP/22, TCP/3389, SNMP</td>
+                                <td>Autorisé (restreint)</td>
+                                <td>Administration des équipements depuis le réseau de gestion dédié</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>La rédaction des règles de pare-feu est un exercice de précision : principe du moindre privilège, <em>deny-all</em> par défaut avec log de la règle de rejet, et spécificité maximale.</p>
+
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-lang">Exemple de Jeu de Règles Pare-feu</span>
+                        </div>
+                        <table class="def-table" style="margin:0; border: none;">
+                            <thead>
+                                <tr><th>N°</th><th>Source</th><th>Destination</th><th>Port/Proto</th><th>Action</th><th>Log</th><th>Commentaire</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>1</td><td>Any</td><td>DMZ-WebSrv</td><td>TCP/443</td><td>Permit</td><td>Oui</td><td>HTTPS public</td></tr>
+                                <tr><td>2</td><td>Any</td><td>DMZ-Mail</td><td>TCP/25</td><td>Permit</td><td>Oui</td><td>SMTP entrant</td></tr>
+                                <tr><td>3</td><td>DMZ</td><td>LAN</td><td>Any</td><td>Deny</td><td>Oui</td><td>Isolation DMZ→LAN</td></tr>
+                                <tr><td>4</td><td>DMZ-WebSrv</td><td>SRV-App</td><td>TCP/8080</td><td>Permit</td><td>Oui</td><td>Front→Back</td></tr>
+                                <tr><td>5</td><td>LAN</td><td>Internet</td><td>TCP/443</td><td>Permit</td><td>Oui</td><td>Web via proxy</td></tr>
+                                <tr><td>6</td><td>LAN</td><td>Internet</td><td>TCP/80</td><td>Deny</td><td>Oui</td><td>HTTP interdit</td></tr>
+                                <tr><td>7</td><td>Bastion</td><td>All zones</td><td>TCP/22</td><td>Permit</td><td>Oui</td><td>SSH admin</td></tr>
+                                <tr><td>8</td><td>Any</td><td>Any</td><td>Any</td><td>Deny</td><td>Oui</td><td>Règle implicite finale</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <p>La journalisation des flux réseau est le mécanisme qui donne de la visibilité sur ce qui traverse le périmètre. Les flux autorisés, particulièrement ceux entre la DMZ et le réseau interne, sont tout aussi importants à surveiller pour détecter les exfiltrations de données ou les anomalies.</p>
+                </div>
+
+                <div class="section" id="section-4">
+                    <h2 class="section-title">
+                        <span class="section-num">04</span>
+                        Services en DMZ — Placement et Sécurisation
+                    </h2>
+
+                    <p>Un service placé trop proche du réseau interne offre une surface d'attaque plus dangereuse en cas de compromission. Un service purement interne n'a aucune raison d'être en DMZ.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Port standard</th>
+                                <th>Placement recommandé</th>
+                                <th>Points de sécurité clés</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Serveur web (Apache, Nginx)</td>
+                                <td>TCP/443</td>
+                                <td>DMZ publique — derrière reverse proxy</td>
+                                <td>TLS 1.2/1.3 uniquement, désactivation des headers serveur, WAF en frontal</td>
+                            </tr>
+                            <tr>
+                                <td>Reverse proxy (HAProxy, Nginx)</td>
+                                <td>TCP/443</td>
+                                <td>DMZ publique — frontal de tous les services web</td>
+                                <td>Terminaison TLS, filtrage des en-têtes, limitation de débit, inspection de contenu</td>
+                            </tr>
+                            <tr>
+                                <td>Passerelle e-mail (Postfix, Exchange)</td>
+                                <td>TCP/25, 587</td>
+                                <td>DMZ publique — relai entrant et sortant</td>
+                                <td>SPF, DKIM, DMARC, filtrage antispam/antivirus, pas d'accès direct interne</td>
+                            </tr>
+                            <tr>
+                                <td>DNS externe (BIND, Unbound)</td>
+                                <td>UDP/53, TCP/53</td>
+                                <td>DMZ publique — zone DNS publique uniquement</td>
+                                <td>Séparation stricte DNS externe/interne, désactivation récursion publique</td>
+                            </tr>
+                            <tr>
+                                <td>VPN SSL/IPsec (endpoint)</td>
+                                <td>UDP/1194, UDP/500</td>
+                                <td>DMZ publique — concentrateur VPN</td>
+                                <td>Authentification MFA, révocation de certificats, segmentation post-authentification</td>
+                            </tr>
+                            <tr>
+                                <td>Bastion SSH / RDP (Guacamole, Teleport)</td>
+                                <td>TCP/22, TCP/443</td>
+                                <td>DMZ privée — accès uniquement après authentification forte</td>
+                                <td>MFA obligatoire, enregistrement des sessions, accès limité aux cibles autorisées</td>
+                            </tr>
+                            <tr>
+                                <td>API B2B (REST, SOAP)</td>
+                                <td>TCP/443</td>
+                                <td>DMZ privée — partenaires identifiés</td>
+                                <td>Authentification mutuelle TLS (mTLS), limitation de débit, validation des entrées</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Le <strong>reverse proxy</strong> est l'élément central : il masque la topologie des serveurs internes, centralise la terminaison TLS et offre un point de contrôle pour les en-têtes de sécurité (HSTS, CSP) et le <em>rate limiting</em>.</p>
+                </div>
+
+                <div class="section" id="section-5">
+                    <h2 class="section-title">
+                        <span class="section-num">05</span>
+                        Filtrage Applicatif et Mécanismes Complémentaires
+                    </h2>
+
+                    <p>Un pare-feu réseau contrôle les couches 3 et 4, mais est aveugle au contenu HTTP. Le <strong>WAF (Web Application Firewall)</strong> comble cette lacune en analysant le contenu HTTP/HTTPS pour bloquer les patterns d'attaque (OWASP Top 10).</p>
+
+                    <p>Le <strong>proxy filtrant sortant</strong> force tout le trafic web des utilisateurs à transiter par lui, garantissant que l'intégralité de la navigation est visible, filtrable et journalisable (catégories, malwares).</p>
+
+                    <p>L'<strong>IPS (Intrusion Prevention System)</strong> analyse le contenu des paquets en coupure pour détecter et bloquer les signatures d'attaque connues sur l'ensemble des protocoles. Il doit faire l'objet d'un calibrage précis pour éviter les faux positifs.</p>
+
+                    <p><strong>Inspection TLS :</strong> 90% du trafic web étant chiffré, les équipements nécessitent du "HTTPS break and inspect" pour voir dans les tunnels TLS. Cela exige le déploiement de certificats racine internes via GPO pour éviter les erreurs de certificat sur les postes.</p>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Vecteurs d'Attaque et Contre-mesures Périmètre
+                    </h2>
+
+                    <p>Les attaques par force brute ciblent les interfaces d'authentification (limitations de débit, WAF, MFA). L'exploitation de vulnérabilités applicatives (0-days, non patchées) est le vecteur le plus redouté : la protection repose sur le patch management, le scan de vulnérabilités, et le WAF.</p>
+
+                    <div class="callout callout-warn">
+                        <span class="callout-icon">⚠️</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Le Pivot depuis la DMZ</div>
+                            <p>Le pivot (lateral movement) vers le réseau interne est le scénario d'attaque le plus critique. L'isolation stricte de la DMZ est impérative : aucun flux ne doit être autorisé vers le LAN sans justification fonctionnelle précise (IP source, IP destination, port unique). Les comptes de service utilisés doivent être dédiés avec des droits limités.</p>
+                        </div>
+                    </div>
+
+                    <p>Les <strong>attaques DDoS</strong> (saturation de ressources) nécessitent une protection en amont (scrubbing centers, Cloudflare, Akamai) combinée à des équipements anti-DDoS ou NGFW sur le périmètre pour maintenir les services disponibles.</p>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Évolution du Périmètre — Cloud, Télétravail et Zero Trust
+                    </h2>
+
+                    <p>La dissolution du périmètre traditionnel (château fort) est accélérée par le cloud computing, la généralisation du télétravail, et l'intégration de la supply chain numérique.</p>
+
+                    <p>Le <strong>modèle Zero Trust</strong> répond à ce défi : ne jamais faire confiance, toujours vérifier (Never Trust, Always Verify). L'identité forte (MFA, conformité du poste) remplace le réseau comme critère d'autorisation. La micro-segmentation limite les déplacements latéraux.</p>
+
+                    <p>Le <strong>SASE (Secure Access Service Edge)</strong> fusionne les fonctions de réseau et de sécurité dans une plateforme cloud unique (Zscaler, Netskope, Prisma Access). Le périmètre de sécurité se déplace vers le cloud, au plus proche des utilisateurs et des données, qu'ils soient au bureau ou en télétravail.</p>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Cas Pratique — Conception d'une Architecture DMZ
+                    </h2>
+
+                    <p><strong>Contexte :</strong> RetailGroup SA hébergeait son site e-commerce directement sur un serveur connecté au réseau interne. Le RSSI doit mettre en œuvre une architecture DMZ sécurisée avec un FortiGate 100F existant.</p>
+                    
+                    <p><strong>Architecture (1 pare-feu multi-interface) :</strong> WAN, DMZ_PUB (Reverse proxy, passerelle mail, DNS public), DMZ_PRIV (Serveur App Python/Django, Bastion Teleport), LAN / Zone serveurs (Base de données PostgreSQL, AD, postes).</p>
+                    
+                    <p><strong>Matrice & Flux :</strong> Tout flux de DMZ_PUB vers LAN ou DMZ_PRIV est interdit, à l'exception du Reverse proxy vers le Serveur App sur TCP/8000. Le Serveur App (DMZ_PRIV) peut interroger PostgreSQL (LAN) sur TCP/5432. ModSecurity (WAF) est déployé sur le reverse proxy Nginx.</p>
+
+                    <p><strong>Bilan :</strong> Deux semaines après activation, le WAF détecte 847 tentatives d'injection SQL invisibles dans l'ancienne architecture. La surface d'attaque est drastiquement réduite grâce à l'isolation des bases de données et des applications derrière le pare-feu et le proxy.</p>
+                </div>
+
+                <div class="section" id="section-9">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Trois grandes leçons synthétisent ce module :</p>
+                    <ol>
+                        <li><strong>L'architecture précède toujours la configuration :</strong> Une DMZ mal conçue ne peut pas être compensée par une configuration pare-feu sophistiquée. Investir dans la matrice de flux est essentiel.</li>
+                        <li><strong>La sécurité périmétrique est vivante, pas statique :</strong> Chaque évolution du SI doit passer par un processus de validation mettant à jour la matrice de flux et les règles de filtrage.</li>
+                        <li><strong>Le périmètre n'est pas la seule ligne de défense :</strong> Elle doit s'inscrire dans une stratégie de défense en profondeur (patch management interne, supervision SIEM, Zero Trust).</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">10</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ACL</td>
+                                <td>Access Control List — liste ordonnée de règles de filtrage appliquées sur un équipement réseau pour autoriser ou interdire les flux selon des critères IP, port et protocole.</td>
+                            </tr>
+                            <tr>
+                                <td>Bastion</td>
+                                <td>Équipement ou machine renforcé servant de point d'accès unique et contrôlé pour l'administration des systèmes d'une zone sécurisée (ex: via SSH ou RDP avec MFA).</td>
+                            </tr>
+                            <tr>
+                                <td>CASB</td>
+                                <td>Cloud Access Security Broker — solution interposée entre les utilisateurs et les services cloud pour appliquer des politiques de sécurité et de conformité.</td>
+                            </tr>
+                            <tr>
+                                <td>Defense in Depth</td>
+                                <td>Stratégie de sécurité superposant plusieurs couches de protection indépendantes, de sorte que la compromission d'une couche ne suffise pas à compromettre l'ensemble du système.</td>
+                            </tr>
+                            <tr>
+                                <td>Diode réseau</td>
+                                <td>Équipement matériel garantissant un flux de données strictement unidirectionnel entre deux réseaux, utilisé pour protéger les réseaux OT/SCADA.</td>
+                            </tr>
+                            <tr>
+                                <td>DMZ</td>
+                                <td>DeMilitarized Zone — zone réseau intermédiaire entre Internet et le réseau interne, hébergeant les services exposés publiquement tout en les isolant du réseau privé.</td>
+                            </tr>
+                            <tr>
+                                <td>Dual-homed</td>
+                                <td>Qualifie un équipement ou serveur possédant deux interfaces réseau connectées à deux zones différentes, pouvant servir de passerelle entre elles.</td>
+                            </tr>
+                            <tr>
+                                <td>IDS / IPS</td>
+                                <td>Intrusion Detection System / Intrusion Prevention System — systèmes analysant le trafic réseau pour détecter (IDS) ou bloquer activement (IPS) les attaques et comportements suspects.</td>
+                            </tr>
+                            <tr>
+                                <td>Lateral movement</td>
+                                <td>Technique par laquelle un attaquant ayant compromis un système se déplace vers d'autres systèmes du réseau, en exploitant les relations de confiance et les accès disponibles.</td>
+                            </tr>
+                            <tr>
+                                <td>mTLS</td>
+                                <td>Mutual TLS — variante du protocole TLS dans laquelle le client et le serveur s'authentifient mutuellement par certificat.</td>
+                            </tr>
+                            <tr>
+                                <td>NAT</td>
+                                <td>Network Address Translation — mécanisme traduisant les adresses IP privées en adresses publiques (et vice versa), masquant la topologie du réseau interne depuis Internet.</td>
+                            </tr>
+                            <tr>
+                                <td>Périmètre réseau</td>
+                                <td>Frontière logique et physique délimitant le réseau interne d'une organisation de l'extérieur, gardée par les équipements de sécurité périmétrique (pare-feu, IPS, proxy).</td>
+                            </tr>
+                            <tr>
+                                <td>Proxy filtrant</td>
+                                <td>Serveur intermédiaire par lequel tout le trafic web sortant des utilisateurs est forcé, permettant d'analyser, filtrer et journaliser les requêtes HTTP/HTTPS.</td>
+                            </tr>
+                            <tr>
+                                <td>Reverse proxy</td>
+                                <td>Serveur intermédiaire placé devant les serveurs web internes, recevant les requêtes des clients externes et les redistribuant aux serveurs d'application, tout en masquant leur topologie.</td>
+                            </tr>
+                            <tr>
+                                <td>VLAN</td>
+                                <td>Virtual Local Area Network — segmentation logique d'un réseau physique permettant d'isoler des groupes d'équipements en domaines de broadcast distincts.</td>
+                            </tr>
+                            <tr>
+                                <td>WAF</td>
+                                <td>Web Application Firewall — solution de filtrage applicatif spécialisée dans la protection des applications web contre les attaques OWASP Top 10 (injection SQL, XSS, CSRF, etc.).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <footer class="course-footer">
+                <div class="footer-info">
+                    <p>Module suivant</p>
+                    <strong>CYB-049 — Audit et tests de conformité →</strong>
+                </div>
+                <div class="footer-actions">
+                    <a href="CYB-047.html" class="btn-nav">
+                        ← Module précédent
+                    </a>
+                    <a href="pdf/CYB-048.pdf" download="CYB-048.pdf" class="btn-dl">
+                        ⬇ Télécharger le PDF contenant le cours complet
+                    </a>
+                    <a href="CYB-049.html" class="btn-nav">
+                        Module suivant →
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        </div>
+    <script>
+        /* ===== SCROLL PROGRESS ===== */
+        const bar = document.getElementById('progress-bar');
+        const tocFill = document.getElementById('toc-prog-fill');
+        const tocPct = document.getElementById('toc-pct');
+
+        function updateScroll() {
+            const scrolled = window.scrollY;
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? scrolled / total * 100 : 0;
+            bar.style.width = pct + '%';
+            tocFill.style.width = pct + '%';
+            tocPct.textContent = Math.round(pct) + '%';
+        }
+
+        /* ===== ACTIVE TOC LINK ===== */
+        const sections = document.querySelectorAll('[id]');
+        const tocLinks = document.querySelectorAll('.toc-item a');
+
+        function updateTOC() {
+            let current = '';
+            sections.forEach(sec => {
+                const top = sec.getBoundingClientRect().top;
+                if (top <= 100) current = sec.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === current);
+            });
+        }
+
+        window.addEventListener('scroll', () => { updateScroll(); updateTOC(); }, { passive: true });
+        updateScroll(); updateTOC();
+
+        /* ===== THEME ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== COPY CODE ===== */
+        function copyCode(btn) {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copié ✓';
+                btn.style.color = '#4ade80';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+            });
+        }
+    </script>
+
+</body>
+</html>
