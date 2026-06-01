@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport de Stage — Mot de ma part</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.35);
+            --radius: 18px;
+            --card-radius: 22px;
+            --transition: .45s cubic-bezier(.4,0,.2,1);
+        }
+
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.7);
+            --nav-bg: rgba(3,7,18,.75);
+            --signature-filter: invert(1) contrast(1.2);
+            --signature-blend: screen;
+        }
+
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e2eeff;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.7);
+            --glass-border: rgba(100,130,200,.2);
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --text-soft: #475569;
+            --card-bg: rgba(255,255,255,.8);
+            --nav-bg: rgba(240,246,255,.85);
+            --signature-filter: contrast(1.2);
+            --signature-blend: multiply;
+        }
+
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        .bg-shape {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        [data-theme="dark"] .bg-shape { opacity: .35; }
+        [data-theme="light"] .bg-shape { opacity: .15; }
+
+        .s1 { width:600px;height:600px;background:#1d4ed8;top:-180px;left:-120px; }
+        .s2 { width:700px;height:700px;background:#6d28d9;bottom:-250px;right:-180px;animation-delay:-8s; }
+        .s3 { width:420px;height:420px;background:#0ea5e9;top:35%;left:45%;animation-duration:22s;animation-delay:-4s; }
+
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(70px,90px) scale(1.12); }
+        }
+
+        /* ===== NAVBAR ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            height: 68px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500;
+            transition: background var(--transition);
+        }
+
+        .nav-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.15rem; font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: .5px; text-transform: uppercase;
+            white-space: nowrap;
+            z-index: 502;
+        }
+
+        .nav-center { 
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex; 
+            gap: .4rem; 
+        }
+
+        .nav-link {
+            color: var(--text-muted); text-decoration: none;
+            font-weight: 600; font-size: .9rem;
+            padding: .45rem .9rem; border-radius: 10px;
+            border: 1px solid transparent;
+            transition: all .25s;
+            cursor: pointer; background: transparent;
+            white-space: nowrap;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: var(--text);
+            background: var(--glass);
+            border-color: var(--glass-border);
+        }
+        .nav-link.active { color: var(--accent); }
+
+        .nav-actions { 
+            display: flex; 
+            align-items: center; 
+            gap: .6rem; 
+            z-index: 502;
+        }
+
+        /* Theme toggle */
+        .theme-btn {
+            width: 40px; height: 40px; border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Hamburger */
+        .hamburger {
+            display: none; flex-direction: column; gap: 5px;
+            cursor: pointer; width: 40px; height: 40px;
+            align-items: center; justify-content: center;
+            border-radius: 12px; border: 1px solid var(--glass-border);
+            background: var(--glass); transition: all .25s;
+        }
+        .hamburger span {
+            display: block; width: 18px; height: 2px;
+            background: var(--text-soft); border-radius: 2px;
+            transition: all .3s;
+        }
+        .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+        .hamburger.open span:nth-child(2) { opacity: 0; }
+        .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+        /* Mobile nav drawer */
+        .mobile-nav {
+            position: fixed; top: 71px; left: 0; right: 0;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 499; padding: 1rem 5%;
+            display: none; flex-direction: column; gap: .5rem;
+            transform: translateY(-10px); opacity: 0;
+            transition: all .3s;
+        }
+        .mobile-nav.open { display: flex; transform: translateY(0); opacity: 1; }
+
+        /* ===== MAIN CONTENT ===== */
+        main {
+            padding-top: 100px;
+            padding-bottom: 5rem;
+            position: relative; z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 71px);
+        }
+
+        .letter-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--card-radius);
+            padding: 4rem;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            animation: fadeUp .8s cubic-bezier(.4,0,.2,1) both;
+        }
+
+        .letter-header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .letter-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #38bdf8, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .letter-subtitle {
+            color: var(--text-soft);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .letter-body {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+
+        .letter-body p {
+            margin-bottom: 1.5rem;
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Signature Area */
+        .signature-block {
+            margin-top: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+
+        .signature-name {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .signature-img {
+            max-width: 200px;
+            height: auto;
+            /* Adapts the black ink to the current theme */
+            filter: var(--signature-filter);
+            mix-blend-mode: var(--signature-blend);
+            opacity: 0.9;
+            transform: rotate(-2deg); /* Slightly tilted for an authentic look */
+        }
+
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(30px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .nav-center { display: none; }
+            .hamburger { display: flex; }
+            .letter-container { padding: 2rem; }
+            .signature-block { align-items: center; text-align: center; margin-top: 3rem; }
+            .mobile-nav .nav-link { text-align: left; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
+    <div class="bg-shape s3"></div>
+
+    <nav>
+        <div class="nav-logo">Stage Geektafood</div>
+
+        <div class="nav-center">
+            <button class="nav-link" onclick="window.location.href='index.html'">Accueil</button>
+            <button class="nav-link" onclick="window.location.href='mes_cours.html'">Mes Cours</button>
+            <button class="nav-link active" onclick="window.location.href='mot_de_ma_part.html'">Mot de la fin</button>
+        </div>
+
+        <div class="nav-actions">
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+            <div class="hamburger" id="hamburger" onclick="toggleMobileNav()">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="mobile-nav" id="mobile-nav">
+        <button class="nav-link" onclick="window.location.href='index.html'">Accueil</button>
+        <button class="nav-link" onclick="window.location.href='mes_cours.html'">Mes Cours</button>
+        <button class="nav-link active" onclick="window.location.href='mot_de_ma_part.html'">Mot de la fin</button>
+    </div>
+
+    <main>
+        <div class="letter-container">
+            <div class="letter-header">
+                <h1 class="letter-title">Un mot de ma part</h1>
+                <div class="letter-subtitle">Bilan d'une expérience enrichissante</div>
+            </div>
+
+            <div class="letter-body">
+                <p>
+                    Je tenais à prendre un moment pour clore ce rapport en exprimant ma profonde gratitude pour cette formidable expérience passée dans l'entreprise. J'ai véritablement adoré la mission qui m'a été confiée au cours de ces semaines, et c'est avec un immense plaisir que je reviendrais si l'occasion se présente.
+                </p>
+                <p>
+                    Ce stage s'est avéré extrêmement formateur. Au-delà de l'approfondissement technique où j'ai pu manipuler et maîtriser <span class="highlight">beaucoup de concepts de cybersécurité</span> de manière concrète, cette expérience m'a poussé à sortir de ma zone de confort.
+                </p>
+                <p>
+                    Afin de produire des supports de qualité, j'ai notamment dû apprendre les <span class="highlight">bases d'un logiciel de montage vidéo</span> et maîtriser les <span class="highlight">fondamentaux d'un logiciel de screencast (OBS Studio)</span>. Surtout, cet exercice de vulgarisation m'a appris à structurer ma pensée et à <span class="highlight">m'exprimer clairement dans un but pédagogique</span>, une compétence qui me sera précieuse pour la suite de mon parcours.
+                </p>
+                <p>
+                    Un grand merci à Romain pour son accompagnement, ses retours constructifs et sa confiance tout au long de la production de ces modules.
+                </p>
+            </div>
+
+            <div class="signature-block">
+                <div class="signature-name">Maxime Loprin</div>
+                <img src="signature.png" alt="Signature de Maxime" class="signature-img">
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /* ===== THEME TOGGLE ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== MOBILE NAV ===== */
+        function toggleMobileNav() {
+            const nav = document.getElementById('mobile-nav');
+            const burger = document.getElementById('hamburger');
+            nav.classList.toggle('open');
+            burger.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

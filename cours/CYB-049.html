@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB-049 — Tests de conformité et audits techniques</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME ===== */
+        :root {
+            --accent: #38bdf8;
+            --accent2: #818cf8;
+            --accent-glow: rgba(56,189,248,.3);
+            --radius: 16px;
+            --transition: .4s cubic-bezier(.4,0,.2,1);
+        }
+        [data-theme="dark"] {
+            --bg: #030712;
+            --bg2: #0f172a;
+            --bg3: #1e293b;
+            --glass: rgba(255,255,255,.04);
+            --glass-border: rgba(255,255,255,.08);
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --card-bg: rgba(15,23,42,.75);
+            --nav-bg: rgba(3,7,18,.8);
+            --callout-info: rgba(56,189,248,.08);
+            --callout-warn: rgba(251,191,36,.08);
+            --callout-tip: rgba(74,222,128,.08);
+            --callout-info-border: rgba(56,189,248,.3);
+            --callout-warn-border: rgba(251,191,36,.3);
+            --callout-tip-border: rgba(74,222,128,.3);
+        }
+        [data-theme="light"] {
+            --bg: #f0f6ff;
+            --bg2: #e4eefb;
+            --bg3: #dce8fb;
+            --glass: rgba(255,255,255,.75);
+            --glass-border: rgba(100,140,210,.18);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --card-bg: rgba(255,255,255,.85);
+            --nav-bg: rgba(240,246,255,.88);
+            --callout-info: rgba(14,165,233,.07);
+            --callout-warn: rgba(217,119,6,.07);
+            --callout-tip: rgba(22,163,74,.07);
+            --callout-info-border: rgba(14,165,233,.3);
+            --callout-warn-border: rgba(217,119,6,.3);
+            --callout-tip-border: rgba(22,163,74,.3);
+        }
+
+        /* ===== RESET ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        /* ===== SCROLL PROGRESS ===== */
+        #progress-bar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #f472b6);
+            z-index: 9999; transition: width .1s linear;
+            border-radius: 0 3px 3px 0;
+        }
+
+        /* ===== BACKGROUND ===== */
+        .bg-shape {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); z-index: 0;
+            animation: float 18s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        [data-theme="dark"] .bg-shape { opacity: .3; }
+        [data-theme="light"] .bg-shape { opacity: .12; }
+        .s1 { width:550px;height:550px;background:#1d4ed8;top:-150px;left:-120px; }
+        .s2 { width:600px;height:600px;background:#6d28d9;bottom:-200px;right:-150px;animation-delay:-8s; }
+        @keyframes float {
+            0%   { transform: translate(0,0) scale(1); }
+            100% { transform: translate(60px,80px) scale(1.1); }
+        }
+
+        /* ===== TOP NAV ===== */
+        nav {
+            position: fixed; top: 3px; width: 100%;
+            height: 64px; padding: 0 5%;
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--nav-bg);
+            backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 500; transition: background var(--transition);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 1rem; }
+
+        .btn-back {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .4rem .9rem; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); color: var(--text-soft);
+            text-decoration: none; font-weight: 600; font-size: .85rem;
+            transition: all .25s; cursor: pointer;
+        }
+        .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        .breadcrumb {
+            display: flex; align-items: center; gap: .4rem;
+            font-size: .82rem; color: var(--text-muted);
+        }
+        .breadcrumb a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+        .breadcrumb a:hover { color: var(--accent); }
+        .breadcrumb-sep { opacity: .4; }
+
+        .nav-right { display: flex; align-items: center; gap: .6rem; }
+
+        .theme-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; transition: all .25s; color: var(--text-soft);
+        }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .reading-time {
+            font-size: .8rem; color: var(--text-muted);
+            background: var(--glass); border: 1px solid var(--glass-border);
+            padding: .3rem .8rem; border-radius: 8px;
+            display: flex; align-items: center; gap: .3rem;
+        }
+
+        /* ===== LAYOUT ===== */
+        .page-wrapper {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-areas: "toc content";
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 84px 2rem 5rem;
+            position: relative; z-index: 1;
+            align-items: start;
+        }
+
+        /* ===== TABLE OF CONTENTS ===== */
+        .toc {
+            grid-area: toc;
+            position: sticky; top: 80px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        .toc::-webkit-scrollbar { width: 4px; }
+        .toc::-webkit-scrollbar-track { background: transparent; }
+        .toc::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .toc-title {
+            font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; color: var(--text-muted);
+            margin-bottom: .9rem; padding-bottom: .7rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .toc-list { list-style: none; display: flex; flex-direction: column; gap: .15rem; }
+
+        .toc-item a {
+            display: flex; align-items: flex-start; gap: .5rem;
+            padding: .4rem .6rem; border-radius: 8px;
+            color: var(--text-muted); text-decoration: none;
+            font-size: .83rem; font-weight: 500; line-height: 1.4;
+            transition: all .2s;
+            border-left: 2px solid transparent;
+        }
+        .toc-item a:hover { color: var(--text); background: var(--glass); }
+        .toc-item a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(56,189,248,.07); }
+        .toc-num { font-size: .72rem; color: var(--accent); font-weight: 700; flex-shrink: 0; padding-top: .1rem; }
+
+        /* Progress in TOC */
+        .toc-progress {
+            margin-top: 1.2rem; padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        .toc-prog-label {
+            display: flex; justify-content: space-between;
+            font-size: .75rem; color: var(--text-muted); margin-bottom: .5rem;
+        }
+        .toc-prog-label span:last-child { color: var(--accent); font-weight: 600; }
+        .toc-prog-track {
+            height: 4px; background: var(--bg3); border-radius: 50px; overflow: hidden;
+        }
+        .toc-prog-fill {
+            height: 100%; border-radius: 50px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            width: 0%; transition: width .3s ease;
+        }
+
+        /* ===== COURSE CONTENT ===== */
+        .content {
+            grid-area: content;
+            min-width: 0;
+        }
+
+        /* Course header */
+        .course-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header-meta {
+            display: flex; align-items: center; gap: .8rem;
+            flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+
+        .tag-module {
+            background: rgba(56,189,248,.12);
+            color: #38bdf8; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 700; letter-spacing: .5px;
+            border: 1px solid rgba(56,189,248,.25);
+        }
+        .tag-cat {
+            background: rgba(129,140,248,.1);
+            color: #a78bfa; padding: .35rem .9rem;
+            border-radius: 30px; font-size: .8rem;
+            font-weight: 600;
+            border: 1px solid rgba(129,140,248,.2);
+        }
+        .status-done {
+            display: flex; align-items: center; gap: .35rem;
+            background: rgba(74,222,128,.1); color: #4ade80;
+            border: 1px solid rgba(74,222,128,.2);
+            padding: .3rem .8rem; border-radius: 30px;
+            font-size: .78rem; font-weight: 600;
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+        .course-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            font-weight: 800; line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f1f5f9 40%, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .course-header h1 {
+            background: linear-gradient(135deg, #0f172a 40%, #334155);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .course-intro {
+            font-size: 1.05rem; line-height: 1.75;
+            color: var(--text-soft); margin-bottom: 1.5rem;
+        }
+
+        .skill-row {
+            display: flex; flex-wrap: wrap; gap: .4rem;
+        }
+        .skill-tag {
+            font-size: .75rem; font-weight: 600;
+            padding: .25rem .7rem; border-radius: 7px;
+            background: var(--bg3);
+            color: var(--text-soft);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* ===== CONTENT BODY ===== */
+        .content-body {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sections */
+        .section { margin-bottom: 3rem; }
+        .section:last-of-type { margin-bottom: 0; }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.35rem; font-weight: 700;
+            color: var(--text); margin-bottom: 1.1rem;
+            padding-bottom: .6rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex; align-items: center; gap: .6rem;
+        }
+        .section-num {
+            font-size: .8rem; font-weight: 700;
+            color: var(--accent); background: rgba(56,189,248,.1);
+            border: 1px solid rgba(56,189,248,.2);
+            padding: .2rem .55rem; border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .content-body p {
+            font-size: 1rem; line-height: 1.8;
+            color: var(--text-soft); margin-bottom: 1.1rem;
+        }
+
+        /* Lists */
+        .content-body ul, .content-body ol {
+            margin: .5rem 0 1.2rem 1.2rem;
+            color: var(--text-soft);
+        }
+        .content-body li {
+            font-size: 1rem; line-height: 1.75;
+            margin-bottom: .4rem; padding-left: .3rem;
+        }
+        .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            margin: 1.4rem 0; display: flex; gap: .9rem; align-items: flex-start;
+        }
+        .callout-info {
+            background: var(--callout-info);
+            border: 1px solid var(--callout-info-border);
+            border-left: 3px solid #38bdf8;
+        }
+        .callout-warn {
+            background: var(--callout-warn);
+            border: 1px solid var(--callout-warn-border);
+            border-left: 3px solid #fbbf24;
+        }
+        .callout-tip {
+            background: var(--callout-tip);
+            border: 1px solid var(--callout-tip-border);
+            border-left: 3px solid #4ade80;
+        }
+        .callout-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+        .callout-body { flex: 1; }
+        .callout-label {
+            font-size: .75rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; margin-bottom: .3rem;
+        }
+        .callout-info .callout-label { color: #38bdf8; }
+        .callout-warn .callout-label { color: #fbbf24; }
+        .callout-tip .callout-label { color: #4ade80; }
+        .callout-body p {
+            font-size: .92rem; margin-bottom: 0; color: var(--text-soft);
+        }
+
+        /* Inline code */
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; font-weight: 500;
+            background: var(--bg3); color: var(--accent);
+            padding: .15rem .45rem; border-radius: 5px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Code block */
+        .code-block {
+            background: var(--bg2); border: 1px solid var(--glass-border);
+            border-radius: 12px; overflow: hidden; margin: 1.2rem 0;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: .6rem 1rem; border-bottom: 1px solid var(--glass-border);
+            background: var(--bg3);
+        }
+        .code-lang {
+            font-size: .72rem; font-weight: 700; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .copy-btn {
+            font-size: .72rem; font-weight: 600; color: var(--text-muted);
+            background: transparent; border: 1px solid var(--glass-border);
+            padding: .2rem .6rem; border-radius: 5px; cursor: pointer;
+            transition: all .2s;
+        }
+        .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .code-block pre {
+            padding: 1.1rem 1.2rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem; line-height: 1.65;
+            color: var(--text-soft);
+            margin: 0;
+        }
+
+        /* Definition table */
+        .def-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        .def-table th {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px; color: var(--text-muted);
+            padding: .7rem 1rem; text-align: left;
+            background: var(--bg3); border-bottom: 1px solid var(--glass-border);
+        }
+        .def-table th:first-child { border-radius: 8px 0 0 0; }
+        .def-table th:last-child { border-radius: 0 8px 0 0; }
+        .def-table td {
+            padding: .75rem 1rem; font-size: .9rem;
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-soft); vertical-align: top;
+        }
+        .def-table tr:last-child td { border-bottom: none; }
+        .def-table tr:hover td { background: var(--glass); }
+        .def-table td:first-child { font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; font-size: .82rem; white-space: nowrap; }
+
+        /* ===== COURSE FOOTER ===== */
+        .course-footer {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 22px;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
+        }
+
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
+
+        .btn-dl {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border: none; border-radius: 50px; text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            transition: all .3s;
+        }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
+
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: .45rem;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: var(--text-soft);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+            border-radius: 50px; text-decoration: none;
+            transition: all .3s;
+        }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
+            .page-wrapper {
+                grid-template-columns: 1fr;
+                grid-template-areas: "content";
+            }
+            .toc { display: none; }
+            .breadcrumb { display: none; }
+        }
+        @media (max-width: 600px) {
+            .content-body, .course-header, .course-footer { padding: 1.5rem; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar"></div>
+
+    <div class="bg-shape s1"></div>
+    <div class="bg-shape s2"></div>
+
+    <nav>
+        <div class="nav-left">
+            <a href="../index.html" class="btn-back">← Retour</a>
+            <div class="breadcrumb">
+                <a href="../index.html">Formations</a>
+                <span class="breadcrumb-sep">/</span>
+                <span>CYB-049</span>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="reading-time">⏱ ~20 min de lecture</div>
+            <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+
+        <aside class="toc">
+            <div class="toc-title">Table des matières</div>
+            <ul class="toc-list">
+                <li class="toc-item">
+                    <a href="#intro" data-section="intro">
+                        <span class="toc-num">00</span>Introduction
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-1" data-section="section-1">
+                        <span class="toc-num">01</span>Fondements des Audits
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-2" data-section="section-2">
+                        <span class="toc-num">02</span>Planification du Programme
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-3" data-section="section-3">
+                        <span class="toc-num">03</span>Méthodologie d'Audit
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-4" data-section="section-4">
+                        <span class="toc-num">04</span>Audit et CIS Benchmarks
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-5" data-section="section-5">
+                        <span class="toc-num">05</span>Scans & Audits d'Accès
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Documentation & Plan d'Action
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Rapport et Pilotage
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Cas Pratique ETI
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-9" data-section="section-9">
+                        <span class="toc-num">09</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">10</span>Glossaire
+                    </a>
+                </li>
+            </ul>
+
+            <div class="toc-progress">
+                <div class="toc-prog-label">
+                    <span>Progression</span>
+                    <span id="toc-pct">0%</span>
+                </div>
+                <div class="toc-prog-track">
+                    <div class="toc-prog-fill" id="toc-prog-fill"></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+
+            <header class="course-header" id="intro">
+                <div class="header-meta">
+                    <span class="tag-module">CYB-049</span>
+                    <span class="tag-cat">Conformité & Audit</span>
+                    <span class="status-done"><span class="status-dot"></span>Terminé</span>
+                </div>
+                <h1>Tests de conformité et audits techniques</h1>
+                <p class="course-intro">
+                    La cybersécurité n'est pas un état que l'on atteint un jour pour ne plus jamais y revenir. C'est un processus continu d'évaluation, d'amélioration et de vérification. Les menaces évoluent, les systèmes d'information changent, les équipes tournent, les configurations dérivent. Sans mécanismes de contrôle réguliers, les mesures de sécurité déployées — aussi robustes soient-elles au moment de leur mise en place — se dégradent progressivement jusqu'à perdre leur efficacité, souvent sans que personne ne s'en aperçoive avant qu'un incident ne vienne révéler brutalement les lacunes accumulées.
+                </p>
+                <div class="skill-row">
+                    <span class="skill-tag">ISO 27001</span>
+                    <span class="skill-tag">CIS Benchmarks</span>
+                    <span class="skill-tag">NIS2</span>
+                    <span class="skill-tag">Nessus / OpenVAS</span>
+                    <span class="skill-tag">Plan d'action (PAC)</span>
+                    <span class="skill-tag">CVSS</span>
+                </div>
+            </header>
+
+            <div class="content-body">
+
+                <p>Les tests de conformité et les audits techniques sont les instruments qui permettent à une organisation de maintenir une vision lucide et objective de son niveau réel de sécurité. Ils répondent à une question fondamentale : ce que nous pensons avoir mis en place est-il réellement en place, correctement configuré, et toujours efficace face aux menaces actuelles ? Cette question, simple en apparence, est en réalité l'une des plus difficiles à répondre honnêtement, tant la perception interne de la sécurité tend naturellement à surestimer le niveau réel de protection.</p>
+                
+                <p>Ce cours explore les fondements, les méthodes et les outils des audits techniques de sécurité : les référentiels qui les structurent, les différents types de contrôles, la méthodologie rigoureuse de réalisation et de documentation des écarts, les outils d'analyse et de scan qui automatisent les vérifications, et la construction de plans d'action correctifs exploitables. Il aborde également la dimension organisationnelle de l'audit pour planifier et piloter efficacement son niveau de sécurité.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <ul style="margin:0; padding-left: 1.2rem; font-size: 0.95rem;">
+                            <li>Identifier les principaux référentiels (ISO 27001, CIS Controls, NIS2, PCI-DSS, DORA).</li>
+                            <li>Appliquer la méthodologie d'un audit technique en six phases.</li>
+                            <li>Réaliser un audit de configuration en utilisant les benchmarks CIS.</li>
+                            <li>Conduire un scan de vulnérabilités et interpréter les scores CVSS.</li>
+                            <li>Construire un plan d'action correctif (PAC) priorisé et rédiger un rapport d'audit.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="section" id="section-1">
+                    <h2 class="section-title">
+                        <span class="section-num">01</span>
+                        Fondements des Audits de Sécurité
+                    </h2>
+
+                    <p>Un audit de sécurité est un processus d'évaluation systématique et indépendant visant à mesurer le niveau réel de sécurité d'un système d'information par rapport à un référentiel défini. Il se distingue d'une simple vérification ponctuelle par sa rigueur méthodologique, sa traçabilité documentaire et son caractère contradictoire. L'audit produit une image objective de l'état de sécurité à un instant donné, identifie les écarts, et formule des recommandations concrètes.</p>
+
+                    <p>La finalité d'un audit de sécurité est triple : contrôler que les mesures sont en place, améliorer les investissements en ciblant les risques, et démontrer la conformité aux parties prenantes (clients, partenaires, régulateurs).</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Référentiel</th>
+                                <th>Type</th>
+                                <th>Secteurs concernés</th>
+                                <th>Principales exigences d'audit technique</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ISO 27001:2022</td>
+                                <td>Norme internationale</td>
+                                <td>Tous secteurs</td>
+                                <td>Audit interne annuel, revue de direction, contrôle des actifs, gestion des vulnérabilités, journalisation</td>
+                            </tr>
+                            <tr>
+                                <td>NIS2 (Dir. UE 2022/2555)</td>
+                                <td>Réglementation UE</td>
+                                <td>Entités essentielles et importantes</td>
+                                <td>Évaluation des risques, contrôle des accès, tests de sécurité réguliers, notification d'incident</td>
+                            </tr>
+                            <tr>
+                                <td>RGPD</td>
+                                <td>Réglementation UE</td>
+                                <td>Données personnelles</td>
+                                <td>AIPD, sécurité des traitements, contrôle des accès, traçabilité</td>
+                            </tr>
+                            <tr>
+                                <td>PCI-DSS v4.0</td>
+                                <td>Standard industrie</td>
+                                <td>Données de paiement</td>
+                                <td>Scan vulnérabilités trimestriel, test d'intrusion annuel, audit de configuration, segmentation</td>
+                            </tr>
+                            <tr>
+                                <td>CIS Controls v8</td>
+                                <td>Bonnes pratiques</td>
+                                <td>Tous secteurs</td>
+                                <td>18 contrôles prioritaires (inventaire, configuration, gestion des accès, logs, tests)</td>
+                            </tr>
+                            <tr>
+                                <td>DORA</td>
+                                <td>Réglementation UE</td>
+                                <td>Secteur financier</td>
+                                <td>Tests de résilience ICT, TLPT, audit des tiers</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Les audits se déclinent en plusieurs types : conformité (respect de la norme), configuration (durcissement des systèmes via scripts ou CIS-CAT), scan de vulnérabilités (outils automatisés), test d'intrusion (exploitabilité réelle), accès (revue AD et IAM) et journaux (cohérence des logs dans le SIEM).</p>
+                </div>
+
+                <div class="section" id="section-2">
+                    <h2 class="section-title">
+                        <span class="section-num">02</span>
+                        Planification du Programme d'Audit
+                    </h2>
+
+                    <p>Un programme d'audit annuel planifie l'ensemble des contrôles de sécurité à réaliser sur une année. Il définit pour chaque contrôle la période, le type, le périmètre, le responsable et le référentiel. La combinaison d'audits internes et de tests externes (pentests) permet une vision complète.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Période</th>
+                                <th>Type de contrôle</th>
+                                <th>Périmètre</th>
+                                <th>Responsable</th>
+                                <th>Référentiel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Janvier</td>
+                                <td>Scan de vulnérabilités externe</td>
+                                <td>Tous services exposés (DMZ, Internet)</td>
+                                <td>RSSI / Prestataire</td>
+                                <td>PCI-DSS, NIS2</td>
+                            </tr>
+                            <tr>
+                                <td>Février</td>
+                                <td>Audit de configuration Windows</td>
+                                <td>AD, serveurs RDS, Exchange</td>
+                                <td>Équipe sécurité</td>
+                                <td>CIS Benchmark Windows</td>
+                            </tr>
+                            <tr>
+                                <td>Mars</td>
+                                <td>Audit des droits d'accès AD</td>
+                                <td>Comptes, groupes à privilèges</td>
+                                <td>RSSI + DSI</td>
+                                <td>ISO 27001, RGPD</td>
+                            </tr>
+                            <tr>
+                                <td>Juin</td>
+                                <td>Test d'intrusion externe</td>
+                                <td>Périmètre exposé web et VPN</td>
+                                <td>Prestataire agréé</td>
+                                <td>PCI-DSS, DORA TLPT</td>
+                            </tr>
+                            <tr>
+                                <td>Septembre</td>
+                                <td>Audit de conformité ISO 27001</td>
+                                <td>Ensemble du SMSI</td>
+                                <td>Auditeur externe</td>
+                                <td>ISO 27001:2022</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Avant tout audit, la lettre de mission définit contractuellement le périmètre exact, les objectifs et les modalités d'accès. Pour les tests techniques, elle inclut une clause d'autorisation explicite (adresses IP, fenêtres de tir) pour protéger légalement l'auditeur.</p>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        Méthodologie d'Audit Technique
+                    </h2>
+
+                    <p>Un audit technique rigoureux suit une méthodologie en six phases, garantissant la qualité et la reproductibilité des résultats :</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Phase</th>
+                                <th>Activités</th>
+                                <th>Outils / Méthodes</th>
+                                <th>Livrables</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1. Préparation</td>
+                                <td>Définition périmètre, revue documentaire, checklists</td>
+                                <td>Référentiels, entretiens préliminaires</td>
+                                <td>Lettre de mission, plan d'audit</td>
+                            </tr>
+                            <tr>
+                                <td>2. Collecte</td>
+                                <td>Tests techniques, entretiens, extractions</td>
+                                <td>Nmap, Nessus, CIS-CAT Pro, Scripts</td>
+                                <td>Données brutes, configurations</td>
+                            </tr>
+                            <tr>
+                                <td>3. Analyse</td>
+                                <td>Qualification des écarts, évaluation criticité</td>
+                                <td>Grille CVSS, impact métier</td>
+                                <td>Tableau d'écarts brut</td>
+                            </tr>
+                            <tr>
+                                <td>4. Restitution</td>
+                                <td>Validation factuelle avec l'équipe auditée</td>
+                                <td>Réunion de clôture, échanges contradictoires</td>
+                                <td>Procès-verbal de restitution</td>
+                            </tr>
+                            <tr>
+                                <td>5. Rapport final</td>
+                                <td>Rédaction du rapport, plan d'action (PAC)</td>
+                                <td>Template, priorisation</td>
+                                <td>Rapport d'audit, PAC</td>
+                            </tr>
+                            <tr>
+                                <td>6. Suivi</td>
+                                <td>Vérification de la mise en œuvre des actions</td>
+                                <td>Re-tests ciblés, tableaux de bord</td>
+                                <td>Rapport de clôture du PAC</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>L'entretien permet de vérifier l'application des processus et de contextualiser les constats techniques (un écart peut avoir une justification métier légitime). La qualification des écarts repose sur le croisement de la probabilité d'exploitation et de l'impact potentiel (score CVSS et contexte de l'actif).</p>
+                </div>
+
+                <div class="section" id="section-4">
+                    <h2 class="section-title">
+                        <span class="section-num">04</span>
+                        Audit de Configuration et CIS Benchmarks
+                    </h2>
+
+                    <p>Le Center for Internet Security (CIS) publie des guides de configuration de référence. Le Niveau 1 regroupe les recommandations fondamentales sans impact fonctionnel majeur, le Niveau 2 est réservé aux environnements de haute sécurité.</p>
+
+                    <p><strong>Windows Server :</strong> La gestion des comptes (complexité, NTLMv1 désactivé), la restriction des services inutiles, la configuration du pare-feu sur tous les profils, et l'activation des journaux de sécurité critiques (4624, 4688) sont vérifiées via scripts ou avec l'outil CIS-CAT Pro.</p>
+
+                    <p><strong>Linux :</strong> Le durcissement inclut les partitions sécurisées (noexec, nosuid), la restriction SSH (pas de mot de passe, pas de root direct), la journalisation sudo stricte, et la désactivation des démons inutiles. Les scripts Bash combinant <code>grep</code>, <code>awk</code> et <code>ss</code> automatisent facilement ce processus.</p>
+
+                    <p><strong>Équipements Réseau (Cisco, Fortinet) :</strong> Les audits valident la désactivation des interfaces d'administration sur les réseaux publics, l'utilisation exclusive de HTTPS/SSH avec authentification forte (MFA), et la protection des protocoles de couche 2 (port security, BPDU Guard).</p>
+                </div>
+
+                <div class="section" id="section-5">
+                    <h2 class="section-title">
+                        <span class="section-num">05</span>
+                        Scans de Vulnérabilités et Audits d'Accès
+                    </h2>
+
+                    <p>Le scan automatisé (Nessus, OpenVAS) identifie les failles connues (CVE) sur les équipements. Un scan <strong>non authentifié</strong> simule un attaquant externe (détecte les services exposés), tandis qu'un scan <strong>authentifié</strong> se connecte aux cibles pour inspecter la version des logiciels internes, détectant une majorité des vulnérabilités.</p>
+
+                    <div class="callout callout-warn">
+                        <span class="callout-icon">⚠️</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Priorisation et Exploitabilité</div>
+                            <p>Toutes les vulnérabilités de score CVSS 9 ne se valent pas. Celles qui possèdent un exploit public disponible (Exploit-DB, Metasploit) exposent l'organisation à un danger immédiat et doivent être corrigées avant les autres, car leur exploitation ne nécessite pas de compétences avancées (score EPSS élevé).</p>
+                        </div>
+                    </div>
+
+                    <p>L'Active Directory (AD) est souvent le cœur du SI Windows. Des outils comme <strong>BloodHound</strong> cartographient les chemins d'attaque pour trouver comment un utilisateur standard peut rebondir vers le groupe Domain Admins. <strong>PingCastle</strong> évalue automatiquement les failles de conception (délégations non contraintes, AdminSDHolder) et fournit un score de sécurité.</p>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Documentation des Écarts et Plan d'Action
+                    </h2>
+
+                    <p>Un constat bien rédigé doit être factuel, précis, référencé au contrôle violé, et proposer une recommandation exploitable.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Contrôle audité</th>
+                                <th>Constat / Écart</th>
+                                <th>Criticité</th>
+                                <th>Recommandation</th>
+                                <th>Délai cible</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>EC-01</td>
+                                <td>Politique de mots de passe</td>
+                                <td>12 comptes sans expiration depuis > 180j</td>
+                                <td>Élevé</td>
+                                <td>Activer expiration (90j) et forcer la réinitialisation immédiate</td>
+                                <td>J+15</td>
+                            </tr>
+                            <tr>
+                                <td>EC-02</td>
+                                <td>Patch management</td>
+                                <td>3 serveurs 2019 avec CVE-2023-44487 non patchée</td>
+                                <td>Critique</td>
+                                <td>Déployer correctifs via WSUS dans les 72h</td>
+                                <td>J+3</td>
+                            </tr>
+                            <tr>
+                                <td>EC-03</td>
+                                <td>Admin locaux</td>
+                                <td>18 postes ont le mot de passe admin local par défaut</td>
+                                <td>Critique</td>
+                                <td>Déployer Microsoft LAPS sur le parc</td>
+                                <td>J+30</td>
+                            </tr>
+                            <tr>
+                                <td>EC-04</td>
+                                <td>Journalisation</td>
+                                <td>4 serveurs Linux non connectés au SIEM</td>
+                                <td>Modéré</td>
+                                <td>Déployer agent Wazuh et valider l'ingestion</td>
+                                <td>J+7</td>
+                            </tr>
+                            <tr>
+                                <td>EC-05</td>
+                                <td>Chiffrement backup</td>
+                                <td>Sauvegardes BDD stockées en clair sur le NAS</td>
+                                <td>Élevé</td>
+                                <td>Activer le chiffrement AES-256 dans Veeam</td>
+                                <td>J+20</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="callout callout-tip">
+                        <span class="callout-icon">✅</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Revue Contradictoire</div>
+                            <p>La revue contradictoire ne doit pas être une négociation des conclusions. Les erreurs factuelles doivent être corrigées, mais si un écart est prouvé, il reste dans le rapport, même si l'équipe technique en conteste la criticité.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Rapport d'Audit et Pilotage de la Conformité
+                    </h2>
+
+                    <p>Le rapport final doit s'adresser à plusieurs audiences. La <strong>synthèse exécutive</strong> (1 page) est conçue pour le COMEX ou le RSSI : elle ne contient aucun jargon, mais traduit les vulnérabilités en risques métiers et propose des priorités d'investissement. Le corps du rapport détaille chaque constat pour les ingénieurs.</p>
+
+                    <p>Le Plan d'Action Correctif (PAC) assigne les tâches aux responsables. Sans lui, le rapport n'a pas d'impact. Les indicateurs de pilotage (taux de conformité global, taux de clôture du PAC dans les délais) permettent à la direction d'évaluer la santé du programme de correction.</p>
+
+                    <p><strong>Vulnérabilités Résiduelles :</strong> Certaines failles (applications legacy impossibles à patcher) ne peuvent être corrigées. Elles doivent faire l'objet d'une acceptation de risque formelle signée par la direction, avec la mise en place de mesures compensatoires (isolation réseau, règles de WAF strictes).</p>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Cas Pratique — Programme d'Audit pour une ETI
+                    </h2>
+
+                    <p><strong>Contexte :</strong> LogiTech Solutions, ETI de 280 salariés éditrice SaaS (RGPD, NIS2 applicable). Suite aux exigences d'un client bancaire, le RSSI lance un audit initial sur AWS, 15 serveurs Linux, 5 serveurs Windows et le réseau. L'audit révèle 47 constats, dont 6 critiques (MFA manquant sur consoles cloud IAM, exposition SSH publique, etc.).</p>
+
+                    <p><strong>Résolution :</strong> Les constats critiques (MFA AWS, restriction réseau) sont corrigés dès la restitution (J+0 à J+7). Le PAC est saisi dans Jira, permettant au RSSI d'avoir une vue temps réel. À J+60, 100% des anomalies critiques sont clôturées et le taux de conformité global a largement rassuré le grand compte bancaire, sécurisant le contrat.</p>
+                </div>
+
+                <div class="section" id="section-9">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Trois grandes leçons synthétisent ce module :</p>
+                    <ol>
+                        <li><strong>L'audit sans suivi n'a aucune valeur :</strong> Un rapport d'audit ne protège pas l'organisation si les écarts ne sont pas corrigés. Le RSSI est responsable jusqu'à la clôture du PAC.</li>
+                        <li><strong>La régularité prime sur l'exhaustivité ponctuelle :</strong> Les configurations dérivent chaque semaine. Des scans légers réguliers (mensuels) valent mieux qu'un seul énorme audit tous les 3 ans.</li>
+                        <li><strong>La documentation est un acte de gouvernance :</strong> Tracer les constats et formaliser l'acceptation des risques résiduels protège l'entreprise vis-à-vis des régulateurs et guide les futurs budgets de cybersécurité.</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">10</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>AIPD</td>
+                                <td>Analyse d'Impact sur la Protection des Données — étude obligatoire (RGPD) pour les traitements présentant un risque élevé pour les droits et libertés.</td>
+                            </tr>
+                            <tr>
+                                <td>Audit interne</td>
+                                <td>Contrôle réalisé par des ressources de l'organisation pour évaluer la conformité aux politiques internes.</td>
+                            </tr>
+                            <tr>
+                                <td>CIS Controls</td>
+                                <td>Les 18 contrôles de sécurité prioritaires (CIS), structurés en groupes (IG1, IG2, IG3) selon la maturité de l'entité.</td>
+                            </tr>
+                            <tr>
+                                <td>Constat d'écart</td>
+                                <td>Observation identifiant une non-conformité entre le SI et le référentiel, accompagnée d'une preuve et d'une recommandation.</td>
+                            </tr>
+                            <tr>
+                                <td>CVSS</td>
+                                <td>Common Vulnerability Scoring System — score standardisé évaluant la sévérité d'une vulnérabilité (0-10).</td>
+                            </tr>
+                            <tr>
+                                <td>Durcissement</td>
+                                <td>Processus de sécurisation réduisant la surface d'attaque (Hardening) : arrêt de services inutiles, application de correctifs.</td>
+                            </tr>
+                            <tr>
+                                <td>LAPS</td>
+                                <td>Local Administrator Password Solution — outil Microsoft gérant les mots de passe admins locaux de façon unique et aléatoire.</td>
+                            </tr>
+                            <tr>
+                                <td>Pentest</td>
+                                <td>Test d'intrusion — évaluation simulant des attaques réelles pour exploiter contractuellement des vulnérabilités.</td>
+                            </tr>
+                            <tr>
+                                <td>Plan d'action correctif</td>
+                                <td>Document (PAC) formalisant la correction des écarts avec responsables, délais et critères de clôture.</td>
+                            </tr>
+                            <tr>
+                                <td>Revue contradictoire</td>
+                                <td>Phase d'audit où les constats sont validés factuellement avec l'équipe auditée avant publication du rapport final.</td>
+                            </tr>
+                            <tr>
+                                <td>SMSI</td>
+                                <td>Système de Management de la Sécurité de l'Information (cadre ISO 27001).</td>
+                            </tr>
+                            <tr>
+                                <td>TLPT</td>
+                                <td>Threat-Led Penetration Testing — test d'intrusion avancé basé sur la Threat Intel, requis par DORA.</td>
+                            </tr>
+                            <tr>
+                                <td>Vulnérabilité résiduelle</td>
+                                <td>Vulnérabilité documentée dont le risque a été formellement accepté par la direction (contraintes métier/techniques).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <footer class="course-footer">
+                <div class="footer-info">
+                    <p>Module suivant</p>
+                    <strong>CYB-050 — Gouvernance et Gestion des Risques →</strong>
+                </div>
+                <div class="footer-actions">
+                    <a href="CYB-048.html" class="btn-nav">
+                        ← Module précédent
+                    </a>
+                    <a href="pdf/CYB-049.pdf" download="CYB-049.pdf" class="btn-dl">
+                        ⬇ Télécharger le PDF contenant le cours complet
+                    </a>
+                    <a href="CYB-050.html" class="btn-nav">
+                        Module suivant →
+                    </a>
+                </div>
+            </footer>
+
+        </div>
+        </div>
+    <script>
+        /* ===== SCROLL PROGRESS ===== */
+        const bar = document.getElementById('progress-bar');
+        const tocFill = document.getElementById('toc-prog-fill');
+        const tocPct = document.getElementById('toc-pct');
+
+        function updateScroll() {
+            const scrolled = window.scrollY;
+            const total = document.body.scrollHeight - window.innerHeight;
+            const pct = total > 0 ? scrolled / total * 100 : 0;
+            bar.style.width = pct + '%';
+            tocFill.style.width = pct + '%';
+            tocPct.textContent = Math.round(pct) + '%';
+        }
+
+        /* ===== ACTIVE TOC LINK ===== */
+        const sections = document.querySelectorAll('[id]');
+        const tocLinks = document.querySelectorAll('.toc-item a');
+
+        function updateTOC() {
+            let current = '';
+            sections.forEach(sec => {
+                const top = sec.getBoundingClientRect().top;
+                if (top <= 100) current = sec.id;
+            });
+            tocLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === current);
+            });
+        }
+
+        window.addEventListener('scroll', () => { updateScroll(); updateTOC(); }, { passive: true });
+        updateScroll(); updateTOC();
+
+        /* ===== THEME ===== */
+        const html = document.documentElement;
+        const themeBtn = document.getElementById('theme-toggle');
+        let isDark = true;
+        themeBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+
+        /* ===== COPY CODE ===== */
+        function copyCode(btn) {
+            const pre = btn.closest('.code-block').querySelector('pre');
+            navigator.clipboard.writeText(pre.textContent.trim()).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copié ✓';
+                btn.style.color = '#4ade80';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+            });
+        }
+    </script>
+
+</body>
+</html>
