@@ -46,7 +46,6 @@
         /* ===== RESET & BASE ===== */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* FIX DU DÉCALAGE : Force l'affichage de la scrollbar verticale */
         html { 
             scroll-behavior: smooth; 
             overflow-y: scroll; 
@@ -59,6 +58,8 @@
             min-height: 100vh;
             overflow-x: hidden;
             transition: background var(--transition), color var(--transition);
+            display: flex;
+            flex-direction: column;
         }
 
         /* ===== SCROLL PROGRESS BAR ===== */
@@ -126,11 +127,11 @@
         }
 
         .nav-center { 
+            display: flex; 
+            gap: .4rem; 
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            display: flex; 
-            gap: .4rem; 
         }
 
         .nav-link {
@@ -200,28 +201,33 @@
         main {
             padding-top: 71px;
             position: relative; z-index: 1;
-            display: grid;
+            flex: 1;
+            display: flex;
+            align-items: center;
         }
 
         .page {
-            grid-area: 1/1;
+            width: 100%;
             opacity: 0; visibility: hidden;
             transform: translateY(24px);
             transition: opacity .5s, transform .5s, visibility .5s;
             pointer-events: none;
+            display: none;
         }
         .page.active {
             opacity: 1; visibility: visible;
             transform: translateY(0);
             pointer-events: all;
+            display: flex;
         }
 
         /* ===== ACCUEIL PAGE ===== */
         #accueil {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-start;
-            text-align: center; padding: 5rem 2rem 4rem;
+            flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 3rem 2rem;
             max-width: 1000px; margin: 0 auto;
+            min-height: calc(100vh - 71px);
         }
 
         .hero-badge {
@@ -244,8 +250,8 @@
 
         .hero-title {
             font-family: 'Syne', sans-serif;
-            font-size: clamp(2.8rem, 6vw, 4.2rem);
-            font-weight: 800; line-height: 1.08;
+            font-size: clamp(2.5rem, 6vw, 4.2rem);
+            font-weight: 800; line-height: 1.1;
             margin-bottom: 1.4rem;
             animation: fadeUp .6s .2s both;
         }
@@ -255,7 +261,7 @@
         }
 
         .hero-sub {
-            color: var(--text-soft); font-size: 1.15rem; line-height: 1.7;
+            color: var(--text-soft); font-size: 1.05rem; line-height: 1.7;
             max-width: 680px; margin-bottom: 3.5rem;
             animation: fadeUp .6s .3s both;
         }
@@ -267,8 +273,9 @@
 
         /* Stats counters */
         .stats-row {
-            display: flex; gap: 1.5rem; flex-wrap: wrap;
-            justify-content: center; width: 100%;
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem; width: 100%;
             margin-bottom: 3.5rem;
             animation: fadeUp .6s .4s both;
         }
@@ -278,7 +285,7 @@
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
-            padding: 1.5rem 2rem; flex: 1; min-width: 160px;
+            padding: 1.5rem; 
             text-align: center;
             transition: transform .3s, border-color .3s;
         }
@@ -286,12 +293,12 @@
 
         .stat-num {
             font-family: 'Syne', sans-serif;
-            font-size: 2.4rem; font-weight: 800;
+            font-size: 2.2rem; font-weight: 800;
             background: linear-gradient(135deg, #38bdf8, #818cf8);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             line-height: 1;
         }
-        .stat-label { font-size: .85rem; color: var(--text-muted); margin-top: .4rem; font-weight: 500; }
+        .stat-label { font-size: .8rem; color: var(--text-muted); margin-top: .6rem; font-weight: 500; }
 
         .btn-primary {
             display: inline-flex; align-items: center; gap: .5rem;
@@ -320,12 +327,26 @@
         #back-top.show { opacity: 1; transform: translateY(0); }
         #back-top:hover { transform: translateY(-3px); }
 
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
+        /* ===== RESPONSIVE FIXES ===== */
+        @media (max-width: 900px) {
             .nav-center { display: none; }
             .hamburger { display: flex; }
-            .stats-row { gap: 1rem; }
-            .mobile-nav .nav-link { text-align: left; width: 100%; }
+        }
+
+        @media (max-width: 600px) {
+            #accueil { padding: 2rem 1rem; justify-content: flex-start; padding-top: 3rem;}
+            .hero-title { font-size: 2.2rem; margin-bottom: 1rem;}
+            .hero-sub { font-size: .95rem; margin-bottom: 2rem; padding: 0 0.5rem;}
+            .stats-row { grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 2rem;}
+            .stat-card { padding: 1.2rem 1rem; }
+            .stat-num { font-size: 1.8rem; }
+            .btn-primary { width: 100%; justify-content: center; padding: 1rem; font-size: 0.95rem;}
+        }
+        
+        @media (max-height: 700px) and (min-width: 600px) {
+             #accueil { padding-top: 2rem; justify-content: flex-start;}
+             .stats-row { margin-bottom: 2rem;}
+             .hero-sub { margin-bottom: 2rem;}
         }
     </style>
 </head>
@@ -379,7 +400,7 @@
                     <div class="stat-label">Modules réalisés</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-num" data-count="156" data-suffix="h">0h</div>
+                    <div class="stat-num" data-count="175" data-suffix="h">0h</div>
                     <div class="stat-label">Heures de stage</div>
                 </div>
                 <div class="stat-card">
