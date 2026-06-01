@@ -27,7 +27,7 @@
             --text-muted: #64748b;
             --text-soft: #94a3b8;
             --card-bg: rgba(15,23,42,.7);
-            --nav-bg: rgba(3,7,18,.75);
+            --nav-bg: rgba(3,7,18,.85);
         }
 
         [data-theme="light"] {
@@ -40,7 +40,7 @@
             --text-muted: #64748b;
             --text-soft: #475569;
             --card-bg: rgba(255,255,255,.8);
-            --nav-bg: rgba(240,246,255,.85);
+            --nav-bg: rgba(240,246,255,.9);
         }
 
         /* ===== RESET & BASE ===== */
@@ -126,7 +126,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             z-index: 1002;
-            flex-shrink: 1; /* Permet au logo de rétrécir si besoin */
+            flex-shrink: 1;
             margin-right: 10px;
         }
 
@@ -141,7 +141,7 @@
         .nav-link {
             color: var(--text-muted); text-decoration: none;
             font-weight: 600; font-size: .9rem;
-            padding: .45rem .9rem; border-radius: 10px;
+            padding: .5rem 1rem; border-radius: 10px;
             border: 1px solid transparent;
             transition: all .25s;
             cursor: pointer; background: transparent;
@@ -159,7 +159,7 @@
             align-items: center; 
             gap: .5rem; 
             z-index: 1002;
-            flex-shrink: 0; /* Empêche les boutons d'être poussés hors de l'écran */
+            flex-shrink: 0;
         }
 
         /* Theme toggle */
@@ -196,13 +196,27 @@
             position: fixed; top: 70px; left: 0; right: 0;
             background: var(--nav-bg);
             backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--glass-border);
-            z-index: 499; padding: 1rem 5%;
-            display: none; flex-direction: column; gap: .5rem;
-            transform: translateY(-10px); opacity: 0;
-            transition: all .3s;
+            z-index: 999; padding: 1.5rem 5%;
+            display: flex; flex-direction: column; gap: 0.8rem;
+            transform: translateY(-20px); opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease-in-out;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .mobile-nav.open { display: flex; transform: translateY(0); opacity: 1; }
+        .mobile-nav.open { 
+            transform: translateY(0); 
+            opacity: 1; 
+            visibility: visible;
+        }
+        .mobile-nav .nav-link {
+            text-align: center;
+            padding: 0.8rem;
+            font-size: 1rem;
+            display: block;
+            width: 100%;
+        }
 
         /* ===== MAIN LAYOUT ===== */
         main {
@@ -334,9 +348,6 @@
         }
         .glass-card.hidden { display: none; }
 
-        /* ========================================= */
-        /* FIX DE L'ALIGNEMENT DES CARTES            */
-        /* ========================================= */
         .card-top {
             padding: 1.5rem 1.5rem 0;
             flex: 1; /* Pousse les éléments vidéo et footer vers le bas */
@@ -456,11 +467,13 @@
         #back-top:hover { transform: translateY(-3px); }
 
         /* ===== RESPONSIVE ===== */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .nav-center { display: none; }
             .hamburger { display: flex; }
-            .courses-grid { grid-template-columns: 1fr; }
             .mobile-nav .nav-link { text-align: left; width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .courses-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
