@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYB-042 — Déploiement et gestion des pare-feu</title>
+    <title>CYB-042 — Déploiement et Gestion des Pare-feu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -439,6 +439,7 @@
 
         .footer-info p { 
             font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
         }
         .footer-info strong { 
             color: var(--text); font-weight: 700; font-size: 1.15rem;
@@ -503,7 +504,7 @@
             </div>
         </div>
         <div class="nav-right">
-            <div class="reading-time">⏱ ~5 min de lecture</div>
+            <div class="reading-time">⏱ ~25 min de lecture</div>
             <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
         </div>
     </nav>
@@ -520,17 +521,47 @@
                 </li>
                 <li class="toc-item">
                     <a href="#section-1" data-section="section-1">
-                        <span class="toc-num">01</span>Fondements et Rôle
+                        <span class="toc-num">01</span>Fondements et Architecture
                     </a>
                 </li>
                 <li class="toc-item">
                     <a href="#section-2" data-section="section-2">
-                        <span class="toc-num">02</span>Les Zones de Sécurité
+                        <span class="toc-num">02</span>Configuration pfSense
                     </a>
                 </li>
                 <li class="toc-item">
                     <a href="#section-3" data-section="section-3">
-                        <span class="toc-num">03</span>Objectifs Pédagogiques
+                        <span class="toc-num">03</span>Configuration FortiGate
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-4" data-section="section-4">
+                        <span class="toc-num">04</span>Configuration Cisco ASA
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-5" data-section="section-5">
+                        <span class="toc-num">05</span>Politiques de Sécurité
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Supervision et Monitoring
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Le SOC et les Pare-feu
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">09</span>Glossaire
                     </a>
                 </li>
             </ul>
@@ -556,121 +587,447 @@
                 </div>
                 <h1>Déploiement et Gestion des Pare-feu</h1>
                 <p class="course-intro">
-                    Dans un monde où les cybermenaces évoluent à une vitesse sans précédent, la maîtrise des pare-feu est devenue une compétence fondamentale pour tout professionnel de la cybersécurité. Le pare-feu est bien plus qu'un simple filtre de paquets : c'est le point de contrôle stratégique entre la confiance et l'incertitude, entre le réseau interne d'une organisation et l'Internet hostile.
+                    Dans un monde où les cybermenaces évoluent à une vitesse sans précédent, la maîtrise des pare-feu est devenue une compétence fondamentale pour tout professionnel de la cybersécurité. Le pare-feu est bien plus qu'un simple filtre de paquets : c'est le point de contrôle stratégique entre la confiance et l'incertitude, entre le réseau interne d'une organisation et l'Internet hostile.<br><br>
+                    Ce cours propose d'explorer en profondeur les mécanismes qui régissent les solutions leaders du marché — pfSense, Fortinet FortiGate et Cisco ASA — tout en vous donnant les clés pour concevoir des politiques de sécurité cohérentes, superviser les équipements en temps réel et contribuer efficacement aux opérations d'un SOC (Security Operations Center).
                 </p>
                 <div class="skill-row">
                     <span class="skill-tag">pfSense</span>
-                    <span class="skill-tag">Fortinet</span>
+                    <span class="skill-tag">FortiGate</span>
                     <span class="skill-tag">Cisco ASA</span>
                     <span class="skill-tag">DMZ</span>
-                    <span class="skill-tag">Zero Trust</span>
-                    <span class="skill-tag">VPN</span>
-                    <span class="skill-tag">Filtrage de paquets</span>
+                    <span class="skill-tag">VPN IPsec</span>
+                    <span class="skill-tag">NGFW</span>
                 </div>
             </header>
 
             <div class="content-body">
 
+                <p>Au-delà de la configuration technique, nous aborderons la logique de défense en profondeur qui guide les choix architecturaux modernes : comment positionner un pare-feu dans une topologie réseau, comment segmenter les flux, comment détecter une anomalie et y répondre. L'objectif final est de faire de vous un acteur capable d'opérer dans un environnement de production réel.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <ul style="margin:0; padding-left: 1.2rem; font-size: 0.95rem;">
+                            <li><strong>Maîtrise Conceptuelle et Architecturale :</strong> Comprendre le rôle d'un pare-feu dans une stratégie de défense en profondeur. Différencier les types de pare-feu (stateless, stateful, applicatif, NGFW). Concevoir une architecture réseau (DMZ, LAN, WAN, management).</li>
+                            <li><strong>Compétences Techniques et Opérationnelles :</strong> Installer et configurer pfSense, Fortinet FortiGate et Cisco ASA. Rédiger des règles de filtrage précises. Mettre en œuvre des VPN IPsec et SSL/TLS. Configurer un système IDS/IPS intégré.</li>
+                            <li><strong>Expertise en Supervision et SOC :</strong> Centraliser les journaux (Syslog, SIEM). Interpréter les alertes et qualifier les incidents. Définir des seuils d'alerte pertinents. Comprendre le rôle du pare-feu dans la réponse à incident.</li>
+                            <li><strong>Conformité et Documentation :</strong> Auditer une configuration (CIS Benchmarks). Produire une documentation de politique de sécurité (Security Policy) lisible et maintenable.</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="section" id="section-1">
                     <h2 class="section-title">
                         <span class="section-num">01</span>
-                        Fondements et Rôle Stratégique
+                        Fondements des Pare-feu et Architecture de Sécurité
                     </h2>
 
-                    <p>Un pare-feu (firewall) est un système (logiciel ou matériel) dont la mission est de contrôler les flux réseau entrants et sortants en appliquant un ensemble de règles définies par l'administrateur.</p>
+                    <p>Un pare-feu (firewall) est un système — logiciel ou matériel — dont la mission est de contrôler les flux réseau entrants et sortants en appliquant un ensemble de règles définies par l'administrateur. Son rôle est de distinguer le trafic autorisé du trafic non autorisé, en s'appuyant sur des critères allant de l'adresse IP au contenu applicatif selon le niveau de sophistication de la solution.</p>
 
-                    <div class="callout callout-info">
-                        <span class="callout-icon">💡</span>
-                        <div class="callout-body">
-                            <div class="callout-label">Défense en profondeur</div>
-                            <p>Il est important de comprendre que le pare-feu n'est jamais une solution unique, il s'inscrit dans une stratégie de défense en profondeur (<em>Defense in Depth</em>) qui superpose plusieurs couches de protection pour sécuriser l'infrastructure globale.</p>
-                        </div>
-                    </div>
+                    <p>Il est important de comprendre que le pare-feu n'est jamais une solution unique. Il s'inscrit dans une stratégie de défense en profondeur (Defense in Depth) qui superpose plusieurs couches de protection. Comme un château médiéval possédait douves, murailles et tours de guet, un datacenter moderne associe pare-feu périmétrique, segmentation interne, IPS et supervision continue.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Génération</th>
+                                <th>Technologie</th>
+                                <th>Niveau d'Inspection</th>
+                                <th>Exemple</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1ère génération</td>
+                                <td>Filtrage de paquets (Stateless)</td>
+                                <td>Couches 3-4 (IP, Port)</td>
+                                <td>ipchains, ACL Cisco</td>
+                            </tr>
+                            <tr>
+                                <td>2ème génération</td>
+                                <td>Inspection stateful (SPI)</td>
+                                <td>Suivi des connexions TCP/UDP</td>
+                                <td>iptables, Cisco PIX</td>
+                            </tr>
+                            <tr>
+                                <td>3ème génération</td>
+                                <td>Proxy applicatif</td>
+                                <td>Couche 7 (protocoles HTTP, FTP)</td>
+                                <td>Squid, ISA Server</td>
+                            </tr>
+                            <tr>
+                                <td>4ème génération (NGFW)</td>
+                                <td>Next-Gen Firewall</td>
+                                <td>DPI, IPS, SSL Inspection, AppID</td>
+                                <td>FortiGate, Cisco FTD, pfSense+</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>La segmentation d'un réseau en zones de confiance distinctes est le premier acte de tout architecte sécurité. Le pare-feu est l'arbitre entre ces zones :</p>
+                    <ul>
+                        <li><strong>La Zone LAN :</strong> Le réseau interne. C'est la zone de confiance maximale, mais la surveillance reste nécessaire pour les mouvements latéraux.</li>
+                        <li><strong>La Zone WAN :</strong> Internet et les réseaux tiers. C'est la zone de confiance zéro (Zero Trust).</li>
+                        <li><strong>La Zone DMZ :</strong> Zone intermédiaire destinée à héberger les services accessibles depuis Internet. Isolée à la fois du WAN et du LAN.</li>
+                    </ul>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Critère</th>
+                                <th>pfSense (CE/Plus)</th>
+                                <th>Fortinet FortiGate</th>
+                                <th>Cisco ASA / FTD</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Type</td>
+                                <td>Open Source / Commercial</td>
+                                <td>Propriétaire (ASIC)</td>
+                                <td>Propriétaire (Cisco IOS)</td>
+                            </tr>
+                            <tr>
+                                <td>Cible</td>
+                                <td>PME, Labs, Hébergeurs</td>
+                                <td>PME à Grandes Entreprises</td>
+                                <td>Grandes Entreprises, SP</td>
+                            </tr>
+                            <tr>
+                                <td>NGFW / IPS</td>
+                                <td>Via Snort/Suricata (package)</td>
+                                <td>Natif FortiGuard</td>
+                                <td>FTD + Snort3</td>
+                            </tr>
+                            <tr>
+                                <td>VPN</td>
+                                <td>IPsec, OpenVPN, WireGuard</td>
+                                <td>IPsec, SSL, SD-WAN</td>
+                                <td>IPsec, AnyConnect SSL</td>
+                            </tr>
+                            <tr>
+                                <td>Interface</td>
+                                <td>WebGUI (PHP)</td>
+                                <td>FortiOS GUI / CLI</td>
+                                <td>ASDM / FMC / CLI</td>
+                            </tr>
+                            <tr>
+                                <td>Coût</td>
+                                <td>Gratuit (matériel requis)</td>
+                                <td>Licence annuelle FortiCare</td>
+                                <td>Licence Smart + Support</td>
+                            </tr>
+                            <tr>
+                                <td>Points forts</td>
+                                <td>Flexibilité, coût faible</td>
+                                <td>Performance ASIC, SD-WAN</td>
+                                <td>Fiabilité, écosystème Cisco</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <div class="section" id="section-2">
                     <h2 class="section-title">
                         <span class="section-num">02</span>
-                        Architecture Réseau : Les Zones de Sécurité
+                        Configuration Avancée de pfSense
                     </h2>
 
-                    <p>La segmentation d'un réseau en zones de confiance distinctes est le premier acte de tout architecte sécurité. Le pare-feu intervient comme l'arbitre principal entre ces différentes zones :</p>
+                    <p>pfSense est une distribution BSD spécialisée, dérivée de FreeBSD, qui transforme un matériel standard (ou une VM) en un pare-feu/routeur de niveau entreprise. Sa force réside dans sa communauté, son écosystème de packages (Suricata, Squid, OpenVPN, HAProxy) et sa totale transparence sur le plan logiciel.</p>
 
-                    <table class="def-table">
-                        <thead>
-                            <tr>
-                                <th>Zone</th>
-                                <th>Description</th>
-                                <th>Niveau de confiance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>LAN (Local Area Network)</td>
-                                <td>Le réseau interne regroupant les postes de travail et serveurs critiques.</td>
-                                <td>Maximale</td>
-                            </tr>
-                            <tr>
-                                <td>DMZ (Demilitarized Zone)</td>
-                                <td>La zone intermédiaire destinée à héberger les services accessibles depuis Internet (serveurs Web, messagerie...).</td>
-                                <td>Intermédiaire</td>
-                            </tr>
-                            <tr>
-                                <td>WAN (Wide Area Network)</td>
-                                <td>Représente l'Internet et les réseaux tiers externes à l'organisation.</td>
-                                <td>Zéro (Zero Trust)</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <p>pfSense applique ses règles de filtrage interface par interface, dans l'ordre de leur apparition dans la liste, de haut en bas. La première règle qui correspond (match) au trafic analysé est appliquée, et la règle implicite en bas de liste est un "deny all" silencieux.</p>
 
                     <div class="callout callout-warn">
                         <span class="callout-icon">⚠️</span>
                         <div class="callout-body">
-                            <div class="callout-label">Sécurité de la DMZ</div>
-                            <p>La règle d'or de la segmentation : si un serveur DMZ est compromis, l'attaquant ne doit <strong>jamais</strong> pouvoir atteindre le LAN directement. Des règles de flux strictes (unidirectionnelles) doivent être imposées.</p>
+                            <div class="callout-label">Erreur de Filtrage WAN/LAN</div>
+                            <p>Un piège classique pour les débutants est de croire que les règles sur l'interface WAN contrôlent le trafic sortant vers Internet. En réalité, pfSense traite le trafic sur l'interface d'entrée. Les règles WAN filtrent donc le trafic entrant depuis Internet, tandis que les règles LAN filtrent ce que les machines du réseau interne peuvent envoyer.</p>
                         </div>
                     </div>
-                </div>
 
-                <div class="section" id="section-3">
-                    <h2 class="section-title">
-                        <span class="section-num">03</span>
-                        Objectifs Pédagogiques
-                    </h2>
+                    <p>Les alias sont une fonctionnalité essentielle pour maintenir une politique lisible (ex: "Serveurs_DMZ" = 192.168.10.10, 192.168.10.20) que l'on référence ensuite dans les règles.</p>
 
-                    <p>Dans ce module complet, nous allons explorer en profondeur les mécanismes des solutions leaders du marché : <strong>pfSense</strong>, <strong>Fortinet FortiGate</strong> et <strong>Cisco ASA</strong>. À l'issue de ce module, vous saurez :</p>
-
+                    <p>Le NAT permet de mapper des adresses IP publiques sur des adresses privées internes via deux mécanismes :</p>
                     <ul>
-                        <li>Différencier les types de pare-feu (stateless, stateful, applicatif, NGFW).</li>
-                        <li>Installer et configurer ces équipements en rédigeant des règles de filtrage précises et optimisées.</li>
-                        <li>Mettre en œuvre des tunnels VPN IPsec et SSL/TLS pour sécuriser les accès distants.</li>
-                        <li>Activer la supervision et centraliser les journaux d'événements (Syslog, SIEM) pour faciliter la réponse aux incidents.</li>
+                        <li><strong>Outbound NAT (Masquerade) :</strong> Tout le trafic sortant du LAN vers Internet est masqué derrière l'adresse IP publique de l'interface WAN.</li>
+                        <li><strong>Port Forwarding (DNAT) :</strong> Rediriger les connexions entrantes sur un port public vers un serveur interne (ex: TCP 443 vers le serveur Web en DMZ).</li>
                     </ul>
 
                     <div class="callout callout-tip">
                         <span class="callout-icon">✅</span>
                         <div class="callout-body">
-                            <div class="callout-label">Bonne pratique : Politique de blocage par défaut</div>
-                            <p>En configuration de pare-feu, la norme est d'adopter une approche de liste blanche (Default Deny). On interdit tout le trafic, puis on n'autorise que ce qui est strictement nécessaire au fonctionnement métier.</p>
+                            <div class="callout-label">Haute Disponibilité : CARP</div>
+                            <p>Pour les environnements de production, un seul pare-feu représente un Single Point of Failure (SPOF). pfSense intègre le protocole CARP (Common Address Redundancy Protocol) qui permet de synchroniser deux pfSense en actif/passif. En cas de défaillance du nœud principal, le secondaire prend automatiquement l'adresse IP virtuelle partagée (VIP).</p>
                         </div>
                     </div>
 
+                    <p>L'intégration de Suricata (ou Snort) permet l'inspection de contenu en mode IDS ou IPS. Il est crucial de surveiller le taux de faux positifs lors de la mise en service pour éviter de bloquer du trafic légitime.</p>
+                </div>
+
+                <div class="section" id="section-3">
+                    <h2 class="section-title">
+                        <span class="section-num">03</span>
+                        Configuration Avancée de Fortinet FortiGate
+                    </h2>
+
+                    <p>Fortinet s'appuie sur une architecture propriétaire reposant sur des puces ASIC dédiées (les SPU — Security Processing Units), conçues pour accélérer matériellement le traitement des flux réseaux, le déchiffrement SSL et l'inspection de contenu. FortiOS unifie sur une même plateforme le pare-feu, l'IPS, le filtre Web, le contrôle applicatif, l'antivirus, le VPN et le SD-WAN.</p>
+
+                    <p>FortiGate utilise un modèle source-interface / destination-interface, ce qui rend les politiques immédiatement lisibles. Une <strong>Security Policy</strong> combine le filtrage IP avec des profils d'inspection de contenu (profiles UTM). L'intelligence de menace est fournie par le service cloud <strong>FortiGuard</strong>.</p>
+
+                    <p>La configuration VPN IPsec suit les phases IKE standard :</p>
+                    <ul>
+                        <li><strong>Phase 1 (IKE) :</strong> Authentification des pairs (AES-256, SHA-256, DH group 14+, PSK ou X.509).</li>
+                        <li><strong>Phase 2 (IPsec) :</strong> Protection des données et définition des réseaux locaux et distants à tunneler (ESP, SA).</li>
+                    </ul>
+
+                    <p>Une fonctionnalité différenciante est le <strong>VDOM (Virtual Domain)</strong>, qui permet de créer plusieurs instances de pare-feu logiquement indépendantes sur un seul équipement physique (ex: VDOM Corporate, VDOM Guest, VDOM Management).</p>
+                </div>
+
+                <div class="section" id="section-4">
+                    <h2 class="section-title">
+                        <span class="section-num">04</span>
+                        Configuration Avancée de Cisco ASA et FTD
+                    </h2>
+
+                    <p>Cisco ASA repose sur le concept de <em>security levels</em> : chaque interface a un niveau entre 0 et 100. Par défaut, le trafic peut circuler du niveau élevé vers le niveau bas (LAN vers WAN), mais jamais l'inverse sans règle explicite. Cisco positionne désormais <strong>FTD (Firepower Threat Defense)</strong>, géré via FMC (Firepower Management Center).</p>
+
+                    <p>La CLI Cisco repose sur des modes hiérarchiques. Les ACL (Access Control Lists) utilisent <code>permit</code> ou <code>deny</code> et s'appliquent via <code>access-group</code> en direction <em>inbound</em> ou <em>outbound</em>.</p>
+
+                    <p>Cisco ASA propose l'<strong>Object NAT</strong> (le plus simple) et le <strong>Twice NAT</strong> (traduit simultanément la source et la destination, indispensable pour des plans d'adressage qui se chevauchent).</p>
+
+                    <p>Pour le VPN, <strong>Cisco AnyConnect</strong> établit un tunnel SSL/TLS (DTLS). L'authentification peut être renforcée via RADIUS/LDAP, MFA (Cisco DUO) et l'évaluation de la posture du poste (HostScan).</p>
+                </div>
+
+                <div class="section" id="section-5">
+                    <h2 class="section-title">
+                        <span class="section-num">05</span>
+                        Politiques de Sécurité — Conception et Rédaction
+                    </h2>
+
+                    <p>Une politique de sécurité (Security Policy) définit les règles et principes encadrant la protection des SI. Sans politique formalisée, la configuration d'un pare-feu est un acte technique déconnecté des besoins métier.</p>
+
+                    <p>On distingue la PSSI (gouvernance), la Politique de Sécurité Réseau, et le Rulebook (règles concrètes).</p>
+
+                    <p>Le <strong>principe du moindre privilège</strong> exige que chaque règle soit aussi restrictive que possible (source, destination, port, protocole). Le processus de création implique une analyse du besoin, la vérification des règles existantes, la rédaction restrictive, les tests, le déploiement documenté, et des revues régulières.</p>
+
+                    <div class="callout callout-info">
+                        <span class="callout-icon">💡</span>
+                        <div class="callout-body">
+                            <div class="callout-label">Revue des Règles Obsolètes</div>
+                            <p>L'un des problèmes les plus courants dans les environnements matures est l'accumulation de règles obsolètes. La solution est la revue périodique (Firewall Rule Review). Sur pfSense et FortiGate, toute règle avec zéro hit sur 90 jours est candidate à la désactivation.</p>
+                        </div>
+                    </div>
+
+                    <p>La conformité s'appuie souvent sur les <strong>CIS Benchmarks</strong>, définissant les paramètres de durcissement recommandés.</p>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Supervision et Monitoring des Pare-feu
+                    </h2>
+
+                    <p>Un pare-feu non supervisé est un équipement aveugle. On distingue la supervision de la disponibilité (SNMP) et de la sécurité (Logs, NetFlow, SIEM).</p>
+
+                    <ul>
+                        <li><strong>Logs :</strong> Format Syslog (RFC 5424). Centralisés vers un SIEM.</li>
+                        <li><strong>SNMP :</strong> Interrogation des compteurs (CPU, mémoire). Utiliser SNMPv3 exclusivement.</li>
+                        <li><strong>NetFlow / IPFIX :</strong> Métadonnées sur les flux pour détecter des anomalies comportementales.</li>
+                    </ul>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Composant SIEM</th>
+                                <th>Rôle</th>
+                                <th>Solution Open Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Collecte</td>
+                                <td>Réception des logs Syslog, CEF, LEEF</td>
+                                <td>Logstash, Fluentd, rsyslog</td>
+                            </tr>
+                            <tr>
+                                <td>Normalisation</td>
+                                <td>Parsing et enrichissement des événements</td>
+                                <td>Logstash Filters, Grok patterns</td>
+                            </tr>
+                            <tr>
+                                <td>Stockage/Indexation</td>
+                                <td>Indexation pour recherche rapide</td>
+                                <td>Elasticsearch, OpenSearch</td>
+                            </tr>
+                            <tr>
+                                <td>Corrélation</td>
+                                <td>Détection de patterns multi-sources</td>
+                                <td>ElastAlert, Sigma rules</td>
+                            </tr>
+                            <tr>
+                                <td>Visualisation</td>
+                                <td>Dashboards et tableaux de bord</td>
+                                <td>Kibana, Grafana</td>
+                            </tr>
+                            <tr>
+                                <td>Alerte</td>
+                                <td>Notification en temps réel</td>
+                                <td>ElastAlert, PagerDuty</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Le SOC et l'Opération des Pare-feu
+                    </h2>
+
+                    <p>Un SOC regroupe des analystes (N1, N2, N3). Le pare-feu y est à la fois capteur et outil de confinement.</p>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Niveau</th>
+                                <th>Rôle</th>
+                                <th>Interaction avec le pare-feu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Niveau 1 (N1)</td>
+                                <td>Triage des alertes, détection initiale</td>
+                                <td>Consulte les logs, identifie les IP suspectes</td>
+                            </tr>
+                            <tr>
+                                <td>Niveau 2 (N2)</td>
+                                <td>Investigation et qualification d'incidents</td>
+                                <td>Analyse les flux, demande des blocages temporaires</td>
+                            </tr>
+                            <tr>
+                                <td>Niveau 3 (N3)</td>
+                                <td>Réponse avancée, threat hunting</td>
+                                <td>Modifie les politiques, déploie des règles de containment</td>
+                            </tr>
+                            <tr>
+                                <td>Ingénierie Sécu</td>
+                                <td>Configuration et maintenance</td>
+                                <td>Gère les mises à jour, l'architecture, les politiques</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>Exemple de log pfSense et analyse :</strong></p>
                     <div class="code-block">
                         <div class="code-header">
-                            <span class="code-lang">bash — Exemple de logique Default Deny (Iptables)</span>
+                            <span class="code-lang">Log — pfSense Filterlog</span>
                             <button class="copy-btn" onclick="copyCode(this)">Copier</button>
                         </div>
-                        <pre># 1. Bloquer tout le trafic par défaut (Drop policy)
-iptables -P INPUT DROP
-iptables -P FORWARD DROP
-
-# 2. Autoriser le trafic sur la boucle locale (localhost)
-iptables -A INPUT -i lo -j ACCEPT
-
-# 3. Autoriser les paquets relatifs aux connexions déjà établies (Stateful)
-iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT</pre>
+                        <pre>Nov 15 14:32:11 pfsense filterlog: 5,,,1000000103,em0,match,block,in,4,0x0,,64,12345,0,DF,6,tcp,60,203.0.113.42,192.168.1.100,54321,22,0,S</pre>
                     </div>
+                    <p>L'interface <code>em0</code> (WAN) a bloqué un paquet IPv4 TCP entrant de <code>203.0.113.42:54321</code> vers <code>192.168.1.100:22</code> (SSH) avec un flag SYN.</p>
 
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>KPI</th>
+                                <th>Définition</th>
+                                <th>Seuil Cible</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MTTR</td>
+                                <td>Délai moyen entre détection et containment</td>
+                                <td>&lt; 30 minutes (incidents critiques)</td>
+                            </tr>
+                            <tr>
+                                <td>Taux de faux positifs IPS</td>
+                                <td>Alertes IPS ne correspondant pas à de vraies menaces</td>
+                                <td>&lt; 5% des alertes</td>
+                            </tr>
+                            <tr>
+                                <td>Couverture des règles</td>
+                                <td>% du trafic contrôlé par des règles explicites</td>
+                                <td>&gt; 99%</td>
+                            </tr>
+                            <tr>
+                                <td>Uptime pare-feu</td>
+                                <td>Disponibilité de l'équipement</td>
+                                <td>&gt; 99,9% (HA requis)</td>
+                            </tr>
+                            <tr>
+                                <td>Règles non utilisées (0 hit)</td>
+                                <td>Règles potentiellement obsolètes</td>
+                                <td>&lt; 10% des règles</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p><strong>Les dix commandements du pare-feu sécurisé :</strong></p>
+                    <ol>
+                        <li>Désactiver les services non utilisés (Telnet, SNMP v1/v2c).</li>
+                        <li>Changer les mots de passe par défaut et activer le MFA sur l'administration.</li>
+                        <li>Isoler l'interface de management sur un VLAN dédié.</li>
+                        <li>Mettre à jour le firmware régulièrement.</li>
+                        <li>Exporter les logs vers un SIEM externe.</li>
+                        <li>Réviser les règles au minimum trimestriellement.</li>
+                        <li>Documenter chaque règle (description, auteur, ticket).</li>
+                        <li>Tester les règles avec des outils (nmap, hping3).</li>
+                        <li>Chiffrer le trafic d'administration (SSH, HTTPS, IPsec).</li>
+                        <li>Simuler des incidents pour valider la supervision.</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Ce cours a couvert l'aspect conceptuel du rôle du pare-feu jusqu'aux enjeux d'un SOC, en passant par la configuration de pfSense, FortiGate et ASA.</p>
+                    <p>Trois grandes leçons synthétisent l'ensemble :</p>
+                    <ol>
+                        <li><strong>La sécurité réseau est politique avant d'être technique :</strong> Sans politique, les règles sont des choix ad hoc non maintenables.</li>
+                        <li><strong>La supervision n'est pas une option :</strong> Un pare-feu silencieux vous laisse aveugle face aux attaques.</li>
+                        <li><strong>Les outils ne sont que des instruments :</strong> Changer d'outil sans changer de méthode ne change pas le niveau de sécurité.</li>
+                    </ol>
+                </div>
+
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>ACL</td><td>Access Control List — liste ordonnée de règles de filtrage sur un équipement réseau.</td></tr>
+                            <tr><td>ASIC</td><td>Application-Specific Integrated Circuit — puce dédiée à une fonction précise (ex: inspection de paquets chez Fortinet).</td></tr>
+                            <tr><td>CARP</td><td>Common Address Redundancy Protocol — protocole de haute disponibilité IP pour pfSense/BSD.</td></tr>
+                            <tr><td>CEF</td><td>Common Event Format — format standardisé de log de sécurité, compatible SIEM.</td></tr>
+                            <tr><td>DPI</td><td>Deep Packet Inspection — inspection du contenu applicatif des paquets réseau.</td></tr>
+                            <tr><td>DMZ</td><td>DeMilitarized Zone — réseau intermédiaire entre LAN et WAN pour les services exposés.</td></tr>
+                            <tr><td>FMC</td><td>Firepower Management Center — console de gestion centralisée pour les équipements Cisco FTD.</td></tr>
+                            <tr><td>FortiGuard</td><td>Service cloud Fortinet fournissant les mises à jour de signatures IPS, filtrage Web, antivirus.</td></tr>
+                            <tr><td>IPS</td><td>Intrusion Prevention System — système qui détecte et bloque activement les attaques en temps réel.</td></tr>
+                            <tr><td>NGFW</td><td>Next-Generation Firewall — pare-feu intégrant DPI, IPS, contrôle applicatif et inspection SSL.</td></tr>
+                            <tr><td>PFS</td><td>Perfect Forward Secrecy — propriété cryptographique garantissant que la compromission d'une clé ne compromet pas les sessions passées.</td></tr>
+                            <tr><td>PSSI</td><td>Politique de Sécurité du Système d'Information — document gouvernant la sécurité globale de l'organisation.</td></tr>
+                            <tr><td>RPO/RTO</td><td>Recovery Point/Time Objective — indicateurs définissant la perte de données et le délai de reprise acceptables.</td></tr>
+                            <tr><td>SIEM</td><td>Security Information and Event Management — plateforme centralisant les logs et corrélant les événements de sécurité.</td></tr>
+                            <tr><td>SOC</td><td>Security Operations Center — équipe et infrastructure dédiées à la surveillance et la réponse aux incidents.</td></tr>
+                            <tr><td>VDOM</td><td>Virtual Domain — partition logique d'un FortiGate en plusieurs instances pare-feu indépendantes.</td></tr>
+                            <tr><td>Zero Trust</td><td>Approche de sécurité qui ne fait confiance à aucun utilisateur ou équipement par défaut, même en réseau interne.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
 
             </div>

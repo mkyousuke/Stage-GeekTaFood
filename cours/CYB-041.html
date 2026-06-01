@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYB-041 — Cartographie et analyse des SI</title>
+    <title>CYB-041 — Cartographie et analyse des systèmes d'information</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -325,6 +325,7 @@
             margin-bottom: .4rem; padding-left: .3rem;
         }
         .content-body li::marker { color: var(--accent); }
+        .content-body strong { color: var(--text); font-weight: 600; }
 
         /* Callout boxes */
         .callout {
@@ -395,6 +396,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: .85rem; line-height: 1.65;
             color: var(--text-soft);
+            margin: 0;
         }
 
         /* Definition table */
@@ -422,36 +424,52 @@
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 22px;
-            padding: 2rem 2.5rem;
-            display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 1rem;
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.2rem;
         }
 
-        .footer-info p { font-size: .85rem; color: var(--text-muted); margin-bottom: .2rem; }
-        .footer-info strong { color: var(--text); font-weight: 600; }
+        .footer-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
 
-        .footer-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+        .footer-info p { 
+            font-size: .9rem; color: var(--text-muted); margin: 0; 
+            text-transform: uppercase; font-weight: 700; letter-spacing: .5px;
+        }
+        .footer-info strong { 
+            color: var(--text); font-weight: 700; font-size: 1.15rem;
+        }
+
+        .footer-actions { 
+            display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; width: 100%;
+        }
 
         .btn-dl {
             display: inline-flex; align-items: center; gap: .45rem;
-            padding: .75rem 1.5rem; font-size: .9rem; font-weight: 600;
-            color: #fff; background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
+            color: #fff; 
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
             border: none; border-radius: 50px; text-decoration: none;
             cursor: pointer;
-            box-shadow: 0 4px 15px var(--accent-glow);
+            box-shadow: 0 4px 20px var(--accent-glow);
             transition: all .3s;
         }
-        .btn-dl:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 25px var(--accent-glow); }
+        .btn-dl:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(56,189,248,.5); }
 
-        .btn-next {
+        .btn-nav {
             display: inline-flex; align-items: center; gap: .45rem;
-            padding: .75rem 1.5rem; font-size: .9rem; font-weight: 600;
+            padding: .85rem 1.5rem; font-size: .95rem; font-weight: 600;
             color: var(--text-soft);
-            background: var(--glass); border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
             border-radius: 50px; text-decoration: none;
             transition: all .3s;
         }
-        .btn-next:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-nav:hover { border-color: var(--accent); color: var(--text); background: rgba(255,255,255,0.06); }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
@@ -464,7 +482,8 @@
         }
         @media (max-width: 600px) {
             .content-body, .course-header, .course-footer { padding: 1.5rem; }
-            .course-footer { flex-direction: column; align-items: flex-start; }
+            .footer-actions { flex-direction: column; align-items: stretch; }
+            .btn-nav, .btn-dl { justify-content: center; text-align: center; }
         }
     </style>
 </head>
@@ -475,7 +494,6 @@
     <div class="bg-shape s1"></div>
     <div class="bg-shape s2"></div>
 
-    <!-- NAV -->
     <nav>
         <div class="nav-left">
             <a href="../index.html" class="btn-back">← Retour</a>
@@ -486,14 +504,13 @@
             </div>
         </div>
         <div class="nav-right">
-            <div class="reading-time">⏱ ~6 min de lecture</div>
+            <div class="reading-time">⏱ ~15 min de lecture</div>
             <button class="theme-btn" id="theme-toggle" title="Changer le thème">🌙</button>
         </div>
     </nav>
 
     <div class="page-wrapper">
 
-        <!-- TABLE DES MATIÈRES -->
         <aside class="toc">
             <div class="toc-title">Table des matières</div>
             <ul class="toc-list">
@@ -504,27 +521,52 @@
                 </li>
                 <li class="toc-item">
                     <a href="#section-1" data-section="section-1">
-                        <span class="toc-num">01</span>L'importance de la cartographie
+                        <span class="toc-num">01</span>Fondements Cartographie
                     </a>
                 </li>
                 <li class="toc-item">
                     <a href="#section-2" data-section="section-2">
-                        <span class="toc-num">02</span>Les composantes d'un SI
+                        <span class="toc-num">02</span>Identification des Actifs
                     </a>
                 </li>
                 <li class="toc-item">
                     <a href="#section-3" data-section="section-3">
-                        <span class="toc-num">03</span>Outils de découverte
+                        <span class="toc-num">03</span>Cartographie des Flux
                     </a>
                 </li>
                 <li class="toc-item">
                     <a href="#section-4" data-section="section-4">
-                        <span class="toc-num">04</span>Analyse des flux réseau
+                        <span class="toc-num">04</span>Analyse des Vulnérabilités
                     </a>
                 </li>
                 <li class="toc-item">
                     <a href="#section-5" data-section="section-5">
-                        <span class="toc-num">05</span>Mise en pratique
+                        <span class="toc-num">05</span>Méthodologie Complète
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-6" data-section="section-6">
+                        <span class="toc-num">06</span>Applications Pratiques
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-7" data-section="section-7">
+                        <span class="toc-num">07</span>Maintien en Condition
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-8" data-section="section-8">
+                        <span class="toc-num">08</span>Cas Pratique ETI
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#section-9" data-section="section-9">
+                        <span class="toc-num">09</span>Synthèse Générale
+                    </a>
+                </li>
+                <li class="toc-item">
+                    <a href="#glossaire" data-section="glossaire">
+                        <span class="toc-num">10</span>Glossaire
                     </a>
                 </li>
             </ul>
@@ -540,231 +582,481 @@
             </div>
         </aside>
 
-        <!-- CONTENU -->
         <div class="content">
 
-            <!-- En-tête du cours -->
             <header class="course-header" id="intro">
                 <div class="header-meta">
                     <span class="tag-module">CYB-041</span>
-                    <span class="tag-cat">Infrastructure</span>
+                    <span class="tag-cat">Infrastructure & Réseaux</span>
                     <span class="status-done"><span class="status-dot"></span>Terminé</span>
                 </div>
-                <h1>Cartographie et analyse des SI</h1>
+                <h1>Cartographie et analyse des systèmes d'information</h1>
                 <p class="course-intro">
-                    Dans ce module d'introduction, nous explorons les méthodologies permettant de cartographier efficacement un Système d'Information (SI). Cette étape est cruciale : il est impossible de protéger ce que l'on ne connaît pas. La cartographie constitue le fondement de toute démarche de sécurité sérieuse.
+                    Dans un monde où les menaces informatiques se complexifient chaque jour, toute démarche de sécurité sérieuse commence par une question fondamentale : que devons-nous protéger ? Avant de déployer des pare-feu, de configurer des règles de filtrage ou de superviser des équipements dans un SOC, il est impératif de savoir précisément ce qui compose le Système d'Information (SI) de l'organisation, comment les différentes entités communiquent entre elles, et où se nichent les vulnérabilités exploitables par un attaquant. Ce cours aborde la cartographie et l'analyse des systèmes d'information, deux disciplines indissociables qui constituent le socle de toute politique de cybersécurité cohérente.
                 </p>
                 <div class="skill-row">
-                    <span class="skill-tag">CMDB</span>
-                    <span class="skill-tag">Inventaire actifs</span>
                     <span class="skill-tag">Nmap</span>
-                    <span class="skill-tag">Analyse des risques</span>
-                    <span class="skill-tag">ITAM</span>
-                    <span class="skill-tag">Flux réseau</span>
+                    <span class="skill-tag">CMDB</span>
+                    <span class="skill-tag">EBIOS RM</span>
+                    <span class="skill-tag">CVE/CVSS</span>
+                    <span class="skill-tag">Cartographie</span>
+                    <span class="skill-tag">Vulnérabilités</span>
                 </div>
             </header>
 
-            <!-- Corps du cours -->
             <div class="content-body">
 
-                <!-- Section 1 -->
+                <p>Sans cartographie, la défense devient aveugle. Sans analyse, elle reste superficielle. Ensemble, elles permettent de passer d'une posture réactive — subir les incidents — à une posture proactive — anticiper, prévenir et contenir.</p>
+                <p>Nous aborderons successivement les méthodes d'identification des actifs critiques, les techniques de cartographie des flux réseau, les approches d'analyse des vulnérabilités, puis nous nous intéresserons à la manière dont ces éléments s'articulent dans une architecture de défense en profondeur et au sein d'un SOC opérationnel.</p>
+                
+                <div class="callout callout-info">
+                    <span class="callout-icon">💡</span>
+                    <div class="callout-body">
+                        <div class="callout-label">Objectifs Pédagogiques</div>
+                        <ul style="margin:0; padding-left: 1.2rem; font-size: 0.95rem;">
+                            <li>Comprendre l'importance de la cartographie dans une démarche de sécurité globale et distinguer les catégories d'actifs.</li>
+                            <li>Réaliser un inventaire complet des actifs d'un SI avec des outils adaptés (Nmap, CMDB, Active Directory).</li>
+                            <li>Construire une matrice de flux réseau représentant les échanges autorisés et interdits.</li>
+                            <li>Identifier et classer les vulnérabilités à l'aide de scanners et du référentiel CVE/CVSS.</li>
+                            <li>Appliquer une méthode d'analyse de risque structurée (EBIOS RM, ISO 27005).</li>
+                            <li>Produire une documentation de cartographie conforme aux bonnes pratiques ANSSI et aux normes (ISO 27001, NIS2).</li>
+                        </ul>
+                    </div>
+                </div>
+
                 <div class="section" id="section-1">
                     <h2 class="section-title">
                         <span class="section-num">01</span>
-                        L'importance de la cartographie
+                        Fondements de la Cartographie des Systèmes d'Information
                     </h2>
 
-                    <p>La cartographie du SI ne se limite pas à un simple inventaire du matériel. Elle englobe un spectre beaucoup plus large : physique, logiciel, organisationnel et fonctionnel. Son objectif est de fournir une vision claire et partagée de l'ensemble des ressources de l'entreprise.</p>
+                    <p>La cartographie des systèmes d'information répond à un principe fondamental en sécurité : on ne peut protéger ce que l'on ne connaît pas. Cette vérité, souvent énoncée dans les cercles de cybersécurité, trouve son écho dans l'enseignement stratégique de Sun Tzu — connais ton terrain avant de livrer bataille. Dans le contexte d'un SI d'entreprise, le terrain, c'est précisément l'ensemble des composants matériels, logiciels, réseaux et données qui constituent l'infrastructure numérique.</p>
 
-                    <div class="callout callout-info">
-                        <span class="callout-icon">💡</span>
+                    <p>Un SI non cartographié génère des angles morts : des machines oubliées, des services exposés à tort, des flux non documentés, des droits d'accès obsolètes. Ce sont autant de portes d'entrée pour un attaquant. La cartographie est donc un prérequis, non un luxe, pour tout RSSI souhaitant construire une défense cohérente.</p>
+
+                    <p>Une <strong>cartographie du SI</strong> est une représentation structurée et documentée de l'ensemble des composants d'un système d'information : les actifs, les relations entre eux, et les interfaces avec l'extérieur. Elle n'est pas figée : une cartographie est un document vivant, mis à jour à chaque changement significatif du SI.</p>
+
+                    <p>On distingue plusieurs niveaux de cartographie :</p>
+                    <ul>
+                        <li><strong>Physique :</strong> Implantation géographique des équipements (salles serveurs, sites distants, cloud).</li>
+                        <li><strong>Logique :</strong> Description des réseaux, sous-réseaux, VLAN et zones de sécurité.</li>
+                        <li><strong>Applicative :</strong> Représentation des applications, de leurs dépendances et des données traitées.</li>
+                        <li><strong>Flux :</strong> Détail des échanges entre composants avec les protocoles et ports associés.</li>
+                    </ul>
+
+                    <div class="callout callout-warn">
+                        <span class="callout-icon">⚠️</span>
                         <div class="callout-body">
-                            <div class="callout-label">À retenir</div>
-                            <p>Selon l'ANSSI, la cartographie est une obligation pour les Opérateurs d'Importance Vitale (OIV) et fortement recommandée dans le cadre de toute politique de sécurité conforme à ISO 27001.</p>
+                            <div class="callout-label">Cadre Réglementaire et Normatif</div>
+                            <p>La cartographie n'est pas seulement une bonne pratique, c'est une obligation. La directive NIS2, le règlement DORA ou la norme ISO 27001 l'exigent formellement. En France, l'ANSSI en fait l'une des premières recommandations de son guide d'hygiène informatique.</p>
                         </div>
                     </div>
-
-                    <p>Sans cartographie à jour, l'entreprise navigue à l'aveugle. Un actif non référencé devient automatiquement un angle mort — et donc une cible potentielle pour un attaquant.</p>
-
-                    <ul>
-                        <li>Identification des actifs physiques (serveurs, routeurs, postes de travail)</li>
-                        <li>Inventaire des actifs logiciels (OS, applications métiers, bases de données)</li>
-                        <li>Compréhension des processus métiers reposant sur ces actifs</li>
-                        <li>Analyse des flux de données en interne et vers l'extérieur</li>
-                    </ul>
                 </div>
 
-                <!-- Section 2 -->
                 <div class="section" id="section-2">
                     <h2 class="section-title">
                         <span class="section-num">02</span>
-                        Les composantes d'un SI
+                        Identification et Classification des Actifs Critiques
                     </h2>
 
-                    <p>Un Système d'Information se décompose en plusieurs couches qu'il faut documenter séparément puis croiser pour obtenir une vue cohérente.</p>
+                    <p>Un <strong>actif du SI</strong> est tout composant qui présente une valeur pour l'organisation et qui nécessite d'être protégé (serveur, poste, application, fichier de configuration, donnée stockée dans le cloud). La classification répond à une double logique : comprendre ce que l'on possède (inventaire) et évaluer l'importance de chaque composant (criticité) via le triptyque CID (Confidentialité, Intégrité, Disponibilité).</p>
 
                     <table class="def-table">
                         <thead>
                             <tr>
-                                <th>Couche</th>
+                                <th>Catégorie d'actif</th>
                                 <th>Exemples</th>
-                                <th>Outil de référence</th>
+                                <th>Criticité</th>
+                                <th>Propriétaire</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Physique</td>
-                                <td>Serveurs, switches, câblage</td>
-                                <td>DCIM, schémas de baie</td>
+                                <td>Serveurs critiques</td>
+                                <td>AD, DNS, DHCP, PKI</td>
+                                <td>Élevée</td>
+                                <td>DSI / Infra</td>
                             </tr>
                             <tr>
-                                <td>Réseau</td>
-                                <td>VLANs, sous-réseaux, DMZ</td>
-                                <td>Nmap, Netdisco</td>
+                                <td>Applications métier</td>
+                                <td>ERP, CRM, Messagerie</td>
+                                <td>Élevée</td>
+                                <td>DSI / MOA</td>
                             </tr>
                             <tr>
-                                <td>Système</td>
-                                <td>OS, firmware, hyperviseurs</td>
-                                <td>CMDB, Ansible</td>
+                                <td>Postes de travail</td>
+                                <td>Portables, fixes</td>
+                                <td>Moyenne</td>
+                                <td>DSI / RH</td>
                             </tr>
                             <tr>
-                                <td>Applicatif</td>
-                                <td>ERP, CRM, applis métier</td>
-                                <td>ITSM, AppDynamics</td>
+                                <td>Équipements réseau</td>
+                                <td>Switches, routeurs, firewalls</td>
+                                <td>Élevée</td>
+                                <td>DSI / Réseau</td>
                             </tr>
                             <tr>
-                                <td>Données</td>
-                                <td>BDD, fichiers, flux API</td>
-                                <td>DLP, schémas de flux</td>
+                                <td>Données sensibles</td>
+                                <td>RH, Finance, R&D</td>
+                                <td>Critique</td>
+                                <td>DPO / RSSI</td>
+                            </tr>
+                            <tr>
+                                <td>Systèmes industriels</td>
+                                <td>SCADA, automates</td>
+                                <td>Critique</td>
+                                <td>DSI / Prod</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <div class="callout callout-warn">
-                        <span class="callout-icon">⚠️</span>
-                        <div class="callout-body">
-                            <div class="callout-label">Point d'attention</div>
-                            <p>La couche « Données » est souvent la plus négligée dans les cartographies initiales, alors qu'elle est directement ciblée lors des exfiltrations et des ransomwares.</p>
-                        </div>
-                    </div>
+                    <p>L'inventaire combine des approches automatisées et humaines. Des outils comme Nmap (<code>nmap -sV -O 192.168.0.0/24</code>) révèlent les équipements non répertoriés. La CMDB (GLPI, ServiceNow) ou l'Active Directory centralisent cette connaissance. Enfin, les entretiens métiers permettent d'identifier le "shadow IT".</p>
+                    <p>Tous les actifs ne se valent pas. La criticité est évaluée via une matrice combinant l'impact métier et la vraisemblance d'une attaque, guidant ainsi directement les investissements de sécurité.</p>
                 </div>
 
-                <!-- Section 3 -->
                 <div class="section" id="section-3">
                     <h2 class="section-title">
                         <span class="section-num">03</span>
-                        Outils de découverte réseau
+                        Cartographie des Flux Réseau
                     </h2>
 
-                    <p>Pour réaliser la cartographie de manière automatisée, on s'appuie sur des outils de découverte réseau. <code>Nmap</code> est l'outil incontournable pour scanner les hôtes actifs, les ports ouverts et identifier les services exposés.</p>
+                    <p>Un flux réseau est une communication entre deux entités, caractérisée par une adresse source, une adresse destination, un protocole et un port. Documenter ces échanges permet de concevoir des règles de filtrage cohérentes pour les pare-feu et constitue une référence absolue pour la détection d'anomalies dans un SOC.</p>
 
-                    <div class="code-block">
-                        <div class="code-header">
-                            <span class="code-lang">bash — Nmap</span>
-                            <button class="copy-btn" onclick="copyCode(this)">Copier</button>
-                        </div>
-                        <pre># Découverte des hôtes actifs sur un sous-réseau
-nmap -sn 192.168.1.0/24
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Flux</th>
+                                <th>Source</th>
+                                <th>Destination</th>
+                                <th>Protocole/Port</th>
+                                <th>Autorisation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Accès web interne</td>
+                                <td>LAN</td>
+                                <td>Internet</td>
+                                <td>TCP/443 HTTPS</td>
+                                <td>Autorisé (proxy)</td>
+                            </tr>
+                            <tr>
+                                <td>Accès ERP</td>
+                                <td>LAN</td>
+                                <td>Serveur ERP</td>
+                                <td>TCP/8080</td>
+                                <td>Autorisé</td>
+                            </tr>
+                            <tr>
+                                <td>RDP administrateurs</td>
+                                <td>VLAN Admin</td>
+                                <td>Serveurs</td>
+                                <td>TCP/3389</td>
+                                <td>Restreint</td>
+                            </tr>
+                            <tr>
+                                <td>SSH serveurs</td>
+                                <td>Bastion</td>
+                                <td>Serveurs</td>
+                                <td>TCP/22</td>
+                                <td>Autorisé</td>
+                            </tr>
+                            <tr>
+                                <td>Télémétrie SCADA</td>
+                                <td>Zone OT</td>
+                                <td>Serveur SCADA</td>
+                                <td>TCP/102</td>
+                                <td>Isolé (diode)</td>
+                            </tr>
+                            <tr>
+                                <td>E-mail entrant</td>
+                                <td>Internet</td>
+                                <td>Passerelle mail</td>
+                                <td>TCP/25 SMTP</td>
+                                <td>Filtré (AntiSpam)</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-# Scan de ports + détection de version des services
-nmap -sV -p 22,80,443,3389 192.168.1.0/24
-
-# Scan complet avec détection OS (nécessite root)
-sudo nmap -A -T4 192.168.1.0/24 -oX rapport_scan.xml</pre>
-                    </div>
-
-                    <div class="callout callout-tip">
-                        <span class="callout-icon">✅</span>
-                        <div class="callout-body">
-                            <div class="callout-label">Bonne pratique</div>
-                            <p>Exportez toujours vos scans au format <code>-oX</code> (XML) pour pouvoir les importer dans des outils de CMDB ou de gestion de vulnérabilités comme Nessus ou OpenVAS.</p>
-                        </div>
-                    </div>
-
-                    <p>Au-delà de Nmap, d'autres outils complètent la chaîne de découverte :</p>
-                    <ul>
-                        <li><strong>Netdisco</strong> — découverte réseau layer 2/3 avec interface web</li>
-                        <li><strong>Lansweeper</strong> — inventaire automatique des actifs IT</li>
-                        <li><strong>Spiceworks</strong> — ITAM open-source avec monitoring intégré</li>
-                    </ul>
+                    <p>La construction de cette matrice s'appuie sur la capture de flux en production (Wireshark pour l'analyse fine, NetFlow/sFlow pour la supervision globale) et l'analyse des journaux des pare-feu. Elle permet de valider la <strong>segmentation réseau</strong> : séparer le LAN, la DMZ, les serveurs critiques et les environnements OT pour endiguer tout déplacement latéral (lateral movement).</p>
                 </div>
 
-                <!-- Section 4 -->
                 <div class="section" id="section-4">
                     <h2 class="section-title">
                         <span class="section-num">04</span>
-                        Analyse des flux réseau
+                        Analyse des Vulnérabilités
                     </h2>
 
-                    <p>Une cartographie efficace doit aussi représenter les flux de données : qui communique avec qui, sur quel protocole, et dans quel sens. Cette analyse est essentielle pour détecter des flux anormaux ou non autorisés.</p>
+                    <p>Une vulnérabilité est une faiblesse susceptible d'être exploitée par une menace pour causer un dommage. Son cycle de vie, de la découverte à la correction (patch), ouvre une fenêtre critique d'exploitation.</p>
 
-                    <p>Les outils de capture et d'analyse de flux :</p>
-                    <ul>
-                        <li><strong>Wireshark</strong> — analyse de paquets en temps réel ou sur capture</li>
-                        <li><strong>NetFlow / sFlow</strong> — collecte des métadonnées de flux sur les équipements réseau</li>
-                        <li><strong>ntopng</strong> — visualisation des flux réseau en temps réel</li>
-                    </ul>
+                    <p>Le référentiel public est la base <strong>CVE (Common Vulnerabilities and Exposures)</strong>. La sévérité est évaluée par le score <strong>CVSS</strong> (0 à 10). Un score supérieur à 9 exige une action urgente.</p>
 
-                    <div class="callout callout-info">
-                        <span class="callout-icon">💡</span>
-                        <div class="callout-body">
-                            <div class="callout-label">Lien avec les autres modules</div>
-                            <p>La cartographie des flux alimente directement le SIEM (CYB-046) et les règles de filtrage du pare-feu (CYB-042). Un flux non documenté est un flux potentiellement non filtré.</p>
-                        </div>
-                    </div>
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Vulnérabilité</th>
+                                <th>CVSS</th>
+                                <th>Actif concerné</th>
+                                <th>Remédiation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CVE-2023-44487 (HTTP/2 Rapid Reset)</td>
+                                <td>7.5</td>
+                                <td>Serveur web Apache</td>
+                                <td>Mise à jour, limitation de requêtes</td>
+                            </tr>
+                            <tr>
+                                <td>Mot de passe par défaut</td>
+                                <td>9.8</td>
+                                <td>Switch réseau</td>
+                                <td>Changement immédiat + MFA</td>
+                            </tr>
+                            <tr>
+                                <td>RDP exposé sur Internet</td>
+                                <td>8.1</td>
+                                <td>Serveur RDS</td>
+                                <td>Bastion SSH, désactivation exposition</td>
+                            </tr>
+                            <tr>
+                                <td>VLAN hopping possible</td>
+                                <td>6.5</td>
+                                <td>Infrastructure switches</td>
+                                <td>Hardening 802.1Q, port security</td>
+                            </tr>
+                            <tr>
+                                <td>Patch OS manquant</td>
+                                <td>7.8</td>
+                                <td>Postes Windows</td>
+                                <td>Déploiement WSUS/SCCM urgent</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Des outils comme Nessus ou OpenVAS permettent de scanner l'infrastructure. Ces scans doivent être réalisés avec une autorisation formelle. L'analyse ne doit cependant pas oublier les vulnérabilités organisationnelles (procédures défaillantes, sauvegardes non testées), tout aussi critiques.</p>
                 </div>
 
-                <!-- Section 5 -->
                 <div class="section" id="section-5">
                     <h2 class="section-title">
                         <span class="section-num">05</span>
-                        Mise en pratique — Lab guidé
+                        Méthodologie Complète de Cartographie
                     </h2>
 
-                    <p>L'exercice pratique de ce module consiste à réaliser une cartographie complète d'un réseau virtuel de 3 machines (Kali, Metasploitable, Windows Server) et à produire un rapport structuré.</p>
+                    <p>Une cartographie SI exhaustive suit une méthodologie rigoureuse en six étapes :</p>
 
-                    <ol style="margin: .5rem 0 1.2rem 1.4rem; color: var(--text-soft);">
-                        <li style="margin-bottom:.5rem; line-height:1.75; font-size:1rem;">Lancer un scan <code>nmap -sn</code> sur le sous-réseau pour identifier les hôtes actifs.</li>
-                        <li style="margin-bottom:.5rem; line-height:1.75; font-size:1rem;">Réaliser un scan de services <code>nmap -sV</code> sur chaque hôte trouvé.</li>
-                        <li style="margin-bottom:.5rem; line-height:1.75; font-size:1rem;">Documenter chaque actif dans un tableau (IP, OS, services, criticité).</li>
-                        <li style="margin-bottom:.5rem; line-height:1.75; font-size:1rem;">Dessiner un schéma de flux entre les machines avec les protocoles identifiés.</li>
-                        <li style="line-height:1.75; font-size:1rem;">Produire un rapport en identifiant les 3 risques principaux observés.</li>
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Étape</th>
+                                <th>Action</th>
+                                <th>Outil / Méthode</th>
+                                <th>Livrable</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1. Périmètre</td>
+                                <td>Définir le scope de la cartographie</td>
+                                <td>Entretiens, documents DSI</td>
+                                <td>Fiche de périmètre</td>
+                            </tr>
+                            <tr>
+                                <td>2. Inventaire</td>
+                                <td>Recenser tous les actifs SI</td>
+                                <td>Nmap, CMDB, AD</td>
+                                <td>Tableau d'actifs</td>
+                            </tr>
+                            <tr>
+                                <td>3. Flux réseau</td>
+                                <td>Identifier et documenter les échanges</td>
+                                <td>Wireshark, NetFlow, entretiens</td>
+                                <td>Matrice de flux</td>
+                            </tr>
+                            <tr>
+                                <td>4. Vulnérabilités</td>
+                                <td>Scanner et qualifier les failles</td>
+                                <td>Nessus, OpenVAS, CVE</td>
+                                <td>Rapport de vulnérabilités</td>
+                            </tr>
+                            <tr>
+                                <td>5. Cartographie</td>
+                                <td>Représenter graphiquement le SI</td>
+                                <td>Draw.io, Visio, ANSSI-SAT</td>
+                                <td>Schéma réseau annoté</td>
+                            </tr>
+                            <tr>
+                                <td>6. Plan d'action</td>
+                                <td>Prioriser les remédiations</td>
+                                <td>Scoring CVSS + criticité</td>
+                                <td>Plan de remédiation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>L'étape de représentation graphique traduit l'inventaire en un schéma visuel et lisible (zones de sécurité, flux critiques, points de contrôle) qui deviendra l'outil de référence pour le COMEX ou le RSSI.</p>
+                </div>
+
+                <div class="section" id="section-6">
+                    <h2 class="section-title">
+                        <span class="section-num">06</span>
+                        Cartographie et Cyberdéfense — Applications Pratiques
+                    </h2>
+
+                    <p>La cartographie est l'alliée incontournable de la PSSI. Elle traduit une règle globale ("protéger les données sensibles") en une règle opérationnelle précise ("le serveur de BDD n'est accessible que par les applicatifs depuis la zone X").</p>
+
+                    <p><strong>Configuration des Pare-feu :</strong> La matrice de flux est la source de la rédaction des règles. Une bonne pratique est d'annoter chaque règle technique avec la référence de la ligne justificative dans la matrice.</p>
+
+                    <p><strong>Détection SOC :</strong> Elle sert de référentiel de normalité. Une alerte SIEM sur un flux non documenté déclenche immédiatement une investigation. Les règles de corrélation n'ont de sens que si la norme est connue.</p>
+
+                    <p><strong>Réponse à Incident :</strong> En cas de compromission, la cartographie permet d'identifier l'environnement d'une machine infectée en quelques minutes pour décider des mesures de confinement (isolement) appropriées.</p>
+                </div>
+
+                <div class="section" id="section-7">
+                    <h2 class="section-title">
+                        <span class="section-num">07</span>
+                        Maintien en Condition de la Cartographie
+                    </h2>
+
+                    <p>Une cartographie ponctuelle devient rapidement obsolète. Elle doit être intégrée dans les processus de gestion des changements (Change Management). Tout déploiement ou ouverture de flux doit déclencher une mise à jour.</p>
+
+                    <p>Il faut également prévoir une révision périodique complète (ex: semestrielle) : redécouverte réseau, comparaison avec l'inventaire, nettoyage des règles de pare-feu obsolètes et nouveaux scans.</p>
+
+                    <p>L'automatisation est aujourd'hui possible : intégration d'outils SIEM, scans de vulnérabilités continus (Qualys VMDR) et liaisons entre la CMDB et les outils d'infrastructure as code (Ansible, Terraform).</p>
+                </div>
+
+                <div class="section" id="section-8">
+                    <h2 class="section-title">
+                        <span class="section-num">08</span>
+                        Cas Pratique — Cartographie d'un SI d'Entreprise
+                    </h2>
+
+                    <p><strong>Contexte :</strong> TechCorp SA (150 salariés, édition logicielle) souhaite se conformer à l'ISO 27001. La DSI ne possède pas de cartographie formelle.</p>
+
+                    <p><strong>Découverte :</strong> Un scan Nmap identifie 87 machines, contre 62 dans le fichier Excel existant. 25 équipements relèvent du <em>shadow IT</em> : Raspberry Pi, caméras IP directes, et un vieux Windows Server 2008 R2 hautement vulnérable.</p>
+
+                    <p><strong>Analyse de Flux :</strong> L'analyse des journaux révèle des connexions sortantes suspectes du serveur ERP (télémétrie non documentée) et un accès non restreint en WMI depuis le VLAN utilisateurs vers le VLAN d'administration.</p>
+
+                    <p><strong>Plan d'Action :</strong> Isoler le serveur obsolète sous 30 jours, fermer la règle de pare-feu WMI, documenter la télémétrie ERP, et mettre à jour l'inventaire global.</p>
+                </div>
+
+                <div class="section" id="section-9">
+                    <h2 class="section-title">
+                        <span class="section-num">09</span>
+                        Synthèse Générale
+                    </h2>
+
+                    <p>Trois grandes leçons synthétisent ce module :</p>
+                    <ol>
+                        <li><strong>La cartographie est un outil d'aide à la décision :</strong> Une cartographie approximative mais maintenue vaut infiniment mieux qu'une cartographie parfaite mais obsolète.</li>
+                        <li><strong>Prioriser les actifs critiques :</strong> 20 % des actifs concentrent 80 % du risque. Il est impératif de concentrer les efforts de surveillance sur ce périmètre.</li>
+                        <li><strong>La surface d'attaque est dynamique :</strong> Chaque changement métier ou cloud étend l'exposition du SI, imposant un processus de maintenance rigoureux et automatisé.</li>
                     </ol>
+                </div>
 
-                    <div class="callout callout-warn">
-                        <span class="callout-icon">⚠️</span>
-                        <div class="callout-body">
-                            <div class="callout-label">Rappel légal</div>
-                            <p>Ces scans doivent être réalisés <strong>exclusivement sur votre environnement de lab</strong>. Tout scan non autorisé sur un réseau tiers constitue une infraction pénale (article 323-1 du Code pénal).</p>
-                        </div>
-                    </div>
+                <div class="section" id="glossaire">
+                    <h2 class="section-title">
+                        <span class="section-num">10</span>
+                        Glossaire
+                    </h2>
+
+                    <table class="def-table">
+                        <thead>
+                            <tr>
+                                <th>Terme</th>
+                                <th>Définition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Actif critique</td>
+                                <td>Composant dont la compromission ou l'indisponibilité aurait un impact majeur sur les activités de l'organisation.</td>
+                            </tr>
+                            <tr>
+                                <td>CMDB</td>
+                                <td>Configuration Management Database — base de données centralisant les informations sur les composants du SI et leurs relations.</td>
+                            </tr>
+                            <tr>
+                                <td>CVE</td>
+                                <td>Common Vulnerabilities and Exposures — référentiel public des vulnérabilités connues, géré par MITRE.</td>
+                            </tr>
+                            <tr>
+                                <td>CVSS</td>
+                                <td>Common Vulnerability Scoring System — score standardisé de sévérité d'une vulnérabilité (0 à 10).</td>
+                            </tr>
+                            <tr>
+                                <td>DRP</td>
+                                <td>Disaster Recovery Plan — plan de reprise d'activité définissant les procédures de restauration après sinistre.</td>
+                            </tr>
+                            <tr>
+                                <td>EBIOS RM</td>
+                                <td>Expression des Besoins et Identification des Objectifs de Sécurité Risk Manager — méthode française d'analyse de risque publiée par l'ANSSI.</td>
+                            </tr>
+                            <tr>
+                                <td>Flux réseau</td>
+                                <td>Communication entre deux entités du SI, caractérisée par une source, une destination, un protocole et un port.</td>
+                            </tr>
+                            <tr>
+                                <td>IOC</td>
+                                <td>Indicator of Compromise — artefact observable (hash, IP, domaine) signalant une compromission potentielle.</td>
+                            </tr>
+                            <tr>
+                                <td>Lateral movement</td>
+                                <td>Technique utilisée par un attaquant pour se déplacer progressivement au sein d'un SI après une intrusion initiale.</td>
+                            </tr>
+                            <tr>
+                                <td>Matrice de flux</td>
+                                <td>Document représentant l'ensemble des échanges autorisés entre les zones du SI.</td>
+                            </tr>
+                            <tr>
+                                <td>PSSI</td>
+                                <td>Politique de Sécurité du Système d'Information — document cadre définissant les règles et objectifs de sécurité de l'organisation.</td>
+                            </tr>
+                            <tr>
+                                <td>RSSI</td>
+                                <td>Responsable de la Sécurité des Systèmes d'Information — pilote la stratégie et la mise en œuvre de la sécurité SI.</td>
+                            </tr>
+                            <tr>
+                                <td>SI</td>
+                                <td>Système d'Information — ensemble des ressources (humaines, matérielles, logicielles) permettant de collecter, traiter et diffuser l'information.</td>
+                            </tr>
+                            <tr>
+                                <td>Surface d'attaque</td>
+                                <td>Ensemble des points d'entrée potentiels exploitables par un attaquant pour compromettre un système.</td>
+                            </tr>
+                            <tr>
+                                <td>VLAN</td>
+                                <td>Virtual Local Area Network — segmentation logique d'un réseau physique permettant d'isoler des groupes d'équipements.</td>
+                            </tr>
+                            <tr>
+                                <td>Zero Trust</td>
+                                <td>Modèle de sécurité n'accordant aucune confiance implicite, même en réseau interne, et imposant une vérification continue.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
             </div>
-            <!-- /content-body -->
-
-            <!-- Pied de page du cours -->
             <footer class="course-footer">
                 <div class="footer-info">
                     <p>Module suivant</p>
                     <strong>CYB-042 — Déploiement et gestion des pare-feu →</strong>
                 </div>
                 <div class="footer-actions">
+                    <a href="../index.html" class="btn-nav">
+                        ← Retour au catalogue
+                    </a>
                     <a href="pdf/CYB-041.pdf" download="CYB-041.pdf" class="btn-dl">
                         ⬇ Télécharger le PDF contenant le cours complet
                     </a>
-                    <a href="CYB-042.html" class="btn-next">
+                    <a href="CYB-042.html" class="btn-nav">
                         Module suivant →
                     </a>
                 </div>
             </footer>
 
         </div>
-        <!-- /content -->
-
-    </div>
-    <!-- /page-wrapper -->
-
+        </div>
     <script>
         /* ===== SCROLL PROGRESS ===== */
         const bar = document.getElementById('progress-bar');
