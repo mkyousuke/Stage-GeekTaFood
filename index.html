@@ -27,7 +27,7 @@
             --text-muted: #64748b;
             --text-soft: #94a3b8;
             --card-bg: rgba(15,23,42,.7);
-            --nav-bg: rgba(3,7,18,.75);
+            --nav-bg: rgba(3,7,18,.85);
         }
 
         [data-theme="light"] {
@@ -40,7 +40,7 @@
             --text-muted: #64748b;
             --text-soft: #475569;
             --card-bg: rgba(255,255,255,.8);
-            --nav-bg: rgba(240,246,255,.85);
+            --nav-bg: rgba(240,246,255,.9);
         }
 
         /* ===== RESET & BASE ===== */
@@ -98,18 +98,18 @@
         /* ===== NAVBAR ===== */
         nav {
             position: fixed; 
-            top: 3px; 
+            top: 0; 
             width: 100%;
             padding: 0 5%;
             display: flex; 
             align-items: center; 
             justify-content: space-between;
-            height: 68px;
+            height: 70px;
             background: var(--nav-bg);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--glass-border);
-            z-index: 500;
+            z-index: 1000;
             transition: background var(--transition);
         }
 
@@ -123,7 +123,7 @@
             letter-spacing: .5px; 
             text-transform: uppercase;
             white-space: nowrap;
-            z-index: 502;
+            z-index: 1002;
         }
 
         .nav-center { 
@@ -137,7 +137,7 @@
         .nav-link {
             color: var(--text-muted); text-decoration: none;
             font-weight: 600; font-size: .9rem;
-            padding: .45rem .9rem; border-radius: 10px;
+            padding: .5rem 1rem; border-radius: 10px;
             border: 1px solid transparent;
             transition: all .25s;
             cursor: pointer; background: transparent;
@@ -154,12 +154,12 @@
             display: flex; 
             align-items: center; 
             gap: .6rem; 
-            z-index: 502;
+            z-index: 1002;
         }
 
         /* Theme toggle */
         .theme-btn {
-            width: 40px; height: 40px; border-radius: 12px;
+            width: 42px; height: 42px; border-radius: 12px;
             border: 1px solid var(--glass-border);
             background: var(--glass); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
@@ -170,7 +170,7 @@
         /* Hamburger */
         .hamburger {
             display: none; flex-direction: column; gap: 5px;
-            cursor: pointer; width: 40px; height: 40px;
+            cursor: pointer; width: 42px; height: 42px;
             align-items: center; justify-content: center;
             border-radius: 12px; border: 1px solid var(--glass-border);
             background: var(--glass); transition: all .25s;
@@ -186,48 +186,47 @@
 
         /* Mobile nav drawer */
         .mobile-nav {
-            position: fixed; top: 71px; left: 0; right: 0;
+            position: fixed; top: 70px; left: 0; right: 0;
             background: var(--nav-bg);
             backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             border-bottom: 1px solid var(--glass-border);
-            z-index: 499; padding: 1rem 5%;
-            display: none; flex-direction: column; gap: .5rem;
-            transform: translateY(-10px); opacity: 0;
-            transition: all .3s;
+            z-index: 999; padding: 1.5rem 5%;
+            display: flex; flex-direction: column; gap: 0.8rem;
+            transform: translateY(-20px); opacity: 0;
+            visibility: hidden;
+            transition: all .3s ease-in-out;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .mobile-nav.open { display: flex; transform: translateY(0); opacity: 1; }
+        .mobile-nav.open { 
+            transform: translateY(0); 
+            opacity: 1; 
+            visibility: visible;
+        }
+        .mobile-nav .nav-link {
+            text-align: center;
+            padding: 0.8rem;
+            font-size: 1rem;
+            display: block;
+            width: 100%;
+        }
 
         /* ===== MAIN LAYOUT ===== */
         main {
-            padding-top: 71px;
             position: relative; z-index: 1;
             flex: 1;
             display: flex;
             align-items: center;
         }
 
-        .page {
-            width: 100%;
-            opacity: 0; visibility: hidden;
-            transform: translateY(24px);
-            transition: opacity .5s, transform .5s, visibility .5s;
-            pointer-events: none;
-            display: none;
-        }
-        .page.active {
-            opacity: 1; visibility: visible;
-            transform: translateY(0);
-            pointer-events: all;
-            display: flex;
-        }
-
         /* ===== ACCUEIL PAGE ===== */
         #accueil {
+            display: flex;
             flex-direction: column;
             align-items: center; justify-content: center;
-            text-align: center; padding: 3rem 2rem;
+            text-align: center; padding: 8rem 2rem 4rem;
             max-width: 1000px; margin: 0 auto;
-            min-height: calc(100vh - 71px);
+            width: 100%;
         }
 
         .hero-badge {
@@ -261,8 +260,8 @@
         }
 
         .hero-sub {
-            color: var(--text-soft); font-size: 1.05rem; line-height: 1.7;
-            max-width: 680px; margin-bottom: 3.5rem;
+            color: var(--text-soft); font-size: 1.1rem; line-height: 1.7;
+            max-width: 700px; margin-bottom: 3.5rem;
             animation: fadeUp .6s .3s both;
         }
 
@@ -274,8 +273,8 @@
         /* Stats counters */
         .stats-row {
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem; width: 100%;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem; width: 100%;
             margin-bottom: 3.5rem;
             animation: fadeUp .6s .4s both;
         }
@@ -285,7 +284,7 @@
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius);
-            padding: 1.5rem; 
+            padding: 1.8rem 1.5rem; 
             text-align: center;
             transition: transform .3s, border-color .3s;
         }
@@ -293,12 +292,12 @@
 
         .stat-num {
             font-family: 'Syne', sans-serif;
-            font-size: 2.2rem; font-weight: 800;
+            font-size: 2.5rem; font-weight: 800;
             background: linear-gradient(135deg, #38bdf8, #818cf8);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             line-height: 1;
         }
-        .stat-label { font-size: .8rem; color: var(--text-muted); margin-top: .6rem; font-weight: 500; }
+        .stat-label { font-size: .9rem; color: var(--text-muted); margin-top: .6rem; font-weight: 600; }
 
         .btn-primary {
             display: inline-flex; align-items: center; gap: .5rem;
@@ -321,10 +320,10 @@
             border: none; cursor: pointer; color: #fff;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.1rem; box-shadow: 0 4px 15px var(--accent-glow);
-            opacity: 0; transform: translateY(10px);
+            opacity: 0; transform: translateY(10px); visibility: hidden;
             transition: all .3s; z-index: 200;
         }
-        #back-top.show { opacity: 1; transform: translateY(0); }
+        #back-top.show { opacity: 1; transform: translateY(0); visibility: visible; }
         #back-top:hover { transform: translateY(-3px); }
 
         /* ===== RESPONSIVE FIXES ===== */
@@ -334,19 +333,13 @@
         }
 
         @media (max-width: 600px) {
-            #accueil { padding: 2rem 1rem; justify-content: flex-start; padding-top: 3rem;}
-            .hero-title { font-size: 2.2rem; margin-bottom: 1rem;}
-            .hero-sub { font-size: .95rem; margin-bottom: 2rem; padding: 0 0.5rem;}
-            .stats-row { grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 2rem;}
-            .stat-card { padding: 1.2rem 1rem; }
-            .stat-num { font-size: 1.8rem; }
-            .btn-primary { width: 100%; justify-content: center; padding: 1rem; font-size: 0.95rem;}
-        }
-        
-        @media (max-height: 700px) and (min-width: 600px) {
-             #accueil { padding-top: 2rem; justify-content: flex-start;}
-             .stats-row { margin-bottom: 2rem;}
-             .hero-sub { margin-bottom: 2rem;}
+            #accueil { padding: 6rem 1.2rem 3rem; }
+            .hero-title { font-size: 2.2rem; margin-bottom: 1.2rem;}
+            .hero-sub { font-size: 1rem; margin-bottom: 2.5rem; padding: 0 0.5rem;}
+            .stats-row { grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem;}
+            .stat-card { padding: 1.5rem 1rem; }
+            .stat-num { font-size: 2rem; }
+            .btn-primary { width: 100%; justify-content: center; padding: 1rem; }
         }
     </style>
 </head>
@@ -362,9 +355,9 @@
         <div class="nav-logo">Stage Geektafood</div>
 
         <div class="nav-center">
-            <button class="nav-link active" onclick="window.location.href='index.html'">Accueil</button>
-            <button class="nav-link" onclick="window.location.href='mes_cours.html'">Mes Cours</button>
-            <button class="nav-link" onclick="window.location.href='mot_de_ma_part.html'">Mot de la fin</button>
+            <a class="nav-link active" href="index.html">Accueil</a>
+            <a class="nav-link" href="mes_cours.html">Mes Cours</a>
+            <a class="nav-link" href="mot_de_ma_part.html">Mot de la fin</a>
         </div>
 
         <div class="nav-actions">
@@ -376,9 +369,9 @@
     </nav>
 
     <div class="mobile-nav" id="mobile-nav">
-        <button class="nav-link active" onclick="window.location.href='index.html'">Accueil</button>
-        <button class="nav-link" onclick="window.location.href='mes_cours.html'">Mes Cours</button>
-        <button class="nav-link" onclick="window.location.href='mot_de_ma_part.html'">Mot de la fin</button>
+        <a class="nav-link active" href="index.html">Accueil</a>
+        <a class="nav-link" href="mes_cours.html">Mes Cours</a>
+        <a class="nav-link" href="mot_de_ma_part.html">Mot de la fin</a>
     </div>
 
     <main>
@@ -391,7 +384,7 @@
             <h1 class="hero-title">Rapport de Stage<br><span>Cybersécurité</span></h1>
 
             <p class="hero-sub">
-                Bienvenue sur mon rapport de stage interactif. Ma mission principale a été de concevoir, rédiger et animer des supports de formation techniques pour sensibiliser et former les apprenants aux enjeux de la cybersécurité moderne.
+                Bienvenue sur le rapport de stage interactif de Maxime Loprin. Ma mission principale chez Geektafood a été de concevoir, rédiger et animer des supports de formation techniques pour sensibiliser et former les apprenants aux enjeux de la cybersécurité moderne.
             </p>
 
             <div class="stats-row">
@@ -413,10 +406,10 @@
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="window.location.href='mes_cours.html'">
+            <a class="btn-primary" href="mes_cours.html">
                 Découvrir mes missions &amp; cours
                 <span class="btn-arrow">→</span>
-            </button>
+            </a>
         </section>
     </main>
 
