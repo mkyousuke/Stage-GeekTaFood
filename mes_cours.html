@@ -238,6 +238,19 @@
             pointer-events: all;
         }
 
+        /* ===== ANIMATIONS D'APPARITION ===== */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up {
+            animation: fadeUp .8s cubic-bezier(.4,0,.2,1) both;
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
         /* ===== COURS PAGE ===== */
         #cours { padding-bottom: 5rem; }
 
@@ -490,6 +503,7 @@
 
         <div class="nav-center">
             <a class="nav-link" href="index.html">Accueil</a>
+            <a class="nav-link" href="missions.html">Mes Missions</a>
             <a class="nav-link active" href="mes_cours.html">Mes Cours</a>
             <a class="nav-link" href="mot_de_ma_part.html">Mot de la fin</a>
         </div>
@@ -504,18 +518,19 @@
 
     <div class="mobile-nav" id="mobile-nav">
         <a class="nav-link" href="index.html">Accueil</a>
+        <a class="nav-link" href="missions.html">Mes Missions</a>
         <a class="nav-link active" href="mes_cours.html">Mes Cours</a>
         <a class="nav-link" href="mot_de_ma_part.html">Mot de la fin</a>
     </div>
 
     <main>
         <section id="cours" class="page active">
-            <div class="courses-header">
+            <div class="courses-header animate-up delay-1">
                 <h2>Modules de Formation</h2>
                 <p>Screencasts pédagogiques et supports écrits réalisés durant le stage</p>
             </div>
 
-            <div class="search-filters">
+            <div class="search-filters animate-up delay-2">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
                     <input type="text" class="search-input" id="search-input"
@@ -533,9 +548,9 @@
                 </div>
             </div>
 
-            <div class="results-info" id="results-info">10 modules trouvés</div>
+            <div class="results-info animate-up delay-3" id="results-info">10 modules trouvés</div>
 
-            <div class="courses-grid" id="courses-grid">
+            <div class="courses-grid animate-up delay-4" id="courses-grid">
 
                 <article class="glass-card" data-cat="Défense" data-title="Cartographie et analyse des SI">
                     <div class="card-top">

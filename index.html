@@ -131,7 +131,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             z-index: 1002;
-            flex-shrink: 1; /* Permet au logo de rétrécir si besoin */
+            flex-shrink: 1;
             margin-right: 10px;
         }
 
@@ -164,7 +164,7 @@
             align-items: center; 
             gap: .5rem; 
             z-index: 1002;
-            flex-shrink: 0; /* Empêche les boutons d'être poussés hors de l'écran */
+            flex-shrink: 0;
         }
 
         /* Theme toggle */
@@ -228,7 +228,7 @@
             position: relative; z-index: 1;
             flex: 1;
             display: flex;
-            align-items: flex-start; /* Evite la coupure sur les très petits écrans */
+            align-items: flex-start;
         }
 
         /* ===== ACCUEIL PAGE ===== */
@@ -364,6 +364,7 @@
 </head>
 <body>
 
+    <div id="progress-bar"></div>
 
     <div class="bg-shape s1"></div>
     <div class="bg-shape s2"></div>
@@ -374,6 +375,8 @@
 
         <div class="nav-center">
             <a class="nav-link active" href="index.html">Accueil</a>
+            <!-- LIEN AJOUTÉ ICI -->
+            <a class="nav-link" href="missions.html">Mes Missions</a>
             <a class="nav-link" href="mes_cours.html">Mes Cours</a>
             <a class="nav-link" href="mot_de_ma_part.html">Mot de la fin</a>
         </div>
@@ -388,6 +391,8 @@
 
     <div class="mobile-nav" id="mobile-nav">
         <a class="nav-link active" href="index.html">Accueil</a>
+        <!-- LIEN AJOUTÉ ICI POUR MOBILE -->
+        <a class="nav-link" href="missions.html">Mes Missions</a>
         <a class="nav-link" href="mes_cours.html">Mes Cours</a>
         <a class="nav-link" href="mot_de_ma_part.html">Mot de la fin</a>
     </div>
